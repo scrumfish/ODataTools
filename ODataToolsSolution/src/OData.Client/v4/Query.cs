@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Text;
 using Scrumfish.OData.Client.Common;
 
 namespace Scrumfish.OData.Client.v4

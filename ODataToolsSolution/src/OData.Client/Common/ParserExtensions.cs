@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Scrumfish.OData.Client.Common
 {
@@ -20,7 +17,7 @@ namespace Scrumfish.OData.Client.Common
             return query;
         }
 
-        public static UnaryExpression GetLambdaBody<TParam,TResult>(this Expression<Func<TParam,TResult>> expression)
+        public static UnaryExpression GetLambdaBody<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
         {
             UnaryExpression result = null;
             if (expression.NodeType == ExpressionType.Lambda)
@@ -36,10 +33,43 @@ namespace Scrumfish.OData.Client.Common
 
         public static string AsOperator(this ExpressionType type)
         {
-            
+            switch (type)
+            {
+                case ExpressionType.Equal:
+                    return " eq ";
+                case ExpressionType.NotEqual:
+                    return " ne ";
+                case ExpressionType.GreaterThan:
+                    return " gt ";
+                case ExpressionType.GreaterThanOrEqual:
+                    return " ge ";
+                case ExpressionType.LessThan:
+                    return " lt ";
+                case ExpressionType.LessThanOrEqual:
+                    return " le ";
+            }
+            throw new InvalidExpressionOperatorException("Unknown operator in the expression.");
         }
 
-        public static 
+        public static bool IsLogicalOperator(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.Equal
+                   || expressionType == ExpressionType.GreaterThan
+                   || expressionType == ExpressionType.GreaterThanOrEqual
+                   || expressionType == ExpressionType.NotEqual
+                   || expressionType == ExpressionType.LessThan
+                   || expressionType == ExpressionType.LessThanOrEqual;
+        }
+
+        public static bool IsMemberAccess(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.MemberAccess;
+        }
+
+        public static bool IsConstant(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.Constant;
+        }
 
         public static string ParseExpression(this Expression expression)
         {
@@ -65,8 +95,29 @@ namespace Scrumfish.OData.Client.Common
                     .Append(logicalExpression.Right.ParseExpression())
                     .ToString();
             }
+            if (expression.NodeType.IsMemberAccess())
+            {
+                var memberExpression = expression as MemberExpression;
+                if (memberExpression == null)
+                {
+                    throw new InvalidExpressionException("Could not find a member expression to parse.");
+                }
+                return memberExpression.Member.Name;
+            }
+            if (expression.NodeType.IsConstant())
+            {
+                var memeberConstant = expression as ConstantExpression;
+                if (memeberConstant == null)
+                {
+                    throw new InvalidExpressionException("Could not find a constant expression to parse.");
+                }
+                if (memeberConstant.Type == typeof (Int32))
+                {
+                    if (memeberConstant.Value != null) return (memeberConstant.Value as int? ?? 0).ToString();
+                }
+            }
             return string.Empty;
         }
-        
+
     }
 }
