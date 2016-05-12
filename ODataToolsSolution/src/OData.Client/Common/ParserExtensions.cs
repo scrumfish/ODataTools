@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -73,51 +74,95 @@ namespace Scrumfish.OData.Client.Common
 
         public static string ParseExpression(this Expression expression)
         {
-            new StringBuilder();
             if (expression.NodeType == ExpressionType.Convert)
             {
-                var unaryExpression = expression as UnaryExpression;
-                if (unaryExpression != null)
-                {
-                    return unaryExpression.Operand.ParseExpression();
-                }
+                return expression.ParseUnaryExpression();
             }
             if (expression.NodeType.IsLogicalOperator())
             {
-                var logicalExpression = expression as BinaryExpression;
-                if (logicalExpression == null)
-                {
-                    throw new InvalidExpressionException("Could not find logical expression to parse.");
-                }
-                return new StringBuilder()
-                    .Append(logicalExpression.Left.ParseExpression())
-                    .Append(logicalExpression.NodeType.AsOperator())
-                    .Append(logicalExpression.Right.ParseExpression())
-                    .ToString();
+                return expression.ParseLogicalExpression();
             }
             if (expression.NodeType.IsMemberAccess())
             {
-                var memberExpression = expression as MemberExpression;
-                if (memberExpression == null)
-                {
-                    throw new InvalidExpressionException("Could not find a member expression to parse.");
-                }
-                return memberExpression.Member.Name;
+                return expression.ParseMemberExpression();
             }
             if (expression.NodeType.IsConstant())
             {
-                var memeberConstant = expression as ConstantExpression;
-                if (memeberConstant == null)
-                {
-                    throw new InvalidExpressionException("Could not find a constant expression to parse.");
-                }
-                if (memeberConstant.Type == typeof (Int32))
-                {
-                    if (memeberConstant.Value != null) return (memeberConstant.Value as int? ?? 0).ToString();
-                }
+                return expression.ParseConstantExpression();
             }
             return string.Empty;
         }
 
+        private static string ParseConstantExpression(this Expression expression)
+        {
+            var memberConstant = expression as ConstantExpression;
+            if (memberConstant == null)
+            {
+                throw new InvalidExpressionException("Could not find a constant expression to parse.");
+            }
+            Func<object, string> convertToString;
+            TypeConverter.TryGetValue(memberConstant.Type, out convertToString);
+            if (convertToString == null)
+            {
+                throw new InvalidExpressionException("Unknown data type for member constant expression.");
+            }
+            return convertToString(memberConstant.Value);
+        }
+
+        private static readonly Dictionary<Type, Func<object, string>> TypeConverter = new Dictionary
+            <Type, Func<object, string>>
+        {
+            {typeof (int), (o) => o.NumberOrNull<int>()},
+            {typeof (short), (o) => o.NumberOrNull<short>()},
+            {typeof (long), (o) => o.NumberOrNull<long>()},
+            {typeof (int?), (o) => o.NumberOrNull<int?>()},
+            {typeof (short?), (o) => o.NumberOrNull<short?>()},
+            {typeof (long?), (o) => o.NumberOrNull<long?>()},
+            {typeof (string), (o) => o.StringOrNull()}
+        };
+
+        private static string NumberOrNull<T>(this object value)
+        {
+            return value == null ? "null" : ((T) value).ToString();
+        }
+
+        private static string StringOrNull(this object value)
+        {
+            return value == null ? "null" : $"'{((string)value)}'";
+        }
+
+        private static string ParseMemberExpression(this Expression expression)
+        {
+            var memberExpression = expression as MemberExpression;
+            if (memberExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find a member expression to parse.");
+            }
+            return memberExpression.Member.Name;
+        }
+
+        private static string ParseLogicalExpression(this Expression expression)
+        {
+            var logicalExpression = expression as BinaryExpression;
+            if (logicalExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find logical expression to parse.");
+            }
+            return new StringBuilder()
+                .Append(logicalExpression.Left.ParseExpression())
+                .Append(logicalExpression.NodeType.AsOperator())
+                .Append(logicalExpression.Right.ParseExpression())
+                .ToString();
+        }
+
+        private static string ParseUnaryExpression(this Expression expression)
+        {
+            var unaryExpression = expression as UnaryExpression;
+            if (unaryExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find unary expression to parse.");
+            }
+            return unaryExpression.Operand.ParseExpression();
+        }
     }
 }
