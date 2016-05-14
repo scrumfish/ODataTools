@@ -100,7 +100,6 @@ namespace Scrumfish.OData.Client.Tests
         public void AsOperator_ReturnsLessThanOrEqual_Test()
         {
             Assert.AreEqual(" le ", AsOperator(ExpressionType.LessThanOrEqual));
-
         }
     }
 }
