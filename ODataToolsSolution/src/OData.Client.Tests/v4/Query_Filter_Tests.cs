@@ -62,5 +62,6 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".Filter<Person>(p => p.FirstName == null);
             Assert.IsTrue(result.StartsWith(expected));
         }
+
     }
 }

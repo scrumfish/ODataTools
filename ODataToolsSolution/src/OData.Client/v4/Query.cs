@@ -15,5 +15,21 @@ namespace Scrumfish.OData.Client.v4
                     .ParseExpression());
             return filter.ToString();
         }
+
+        public static string Top(this string target, int topNum)
+        {
+            var top = target.GetStartQuery()
+               .AppendFormat("$top={0}", topNum);
+
+            return top.ToString();
+        }
+
+        public static string Skip(this string target, int skipNum)
+        {
+            var skip = target.GetStartQuery()
+               .AppendFormat("$skip={0}", skipNum);
+
+            return skip.ToString();
+        }
     }
 }
