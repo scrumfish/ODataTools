@@ -17,14 +17,19 @@ namespace Scrumfish.OData.Client.Common
             }
             return query;
         }
-
-        public static UnaryExpression GetLambdaBody<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
+        public static Expression GetLambdaBody<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
         {
-            UnaryExpression result = null;
+            Expression result = null;
+
             if (expression.NodeType == ExpressionType.Lambda)
             {
                 result = expression.Body as UnaryExpression;
+                if (result == null)
+                {
+                    result = expression.Body as MemberExpression;
+                }
             }
+           
             if (result == null)
             {
                 throw new InvalidExpressionException("Expression is not a lambda expression.");
