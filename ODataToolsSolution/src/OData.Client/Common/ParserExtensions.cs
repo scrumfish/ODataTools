@@ -17,22 +17,44 @@ namespace Scrumfish.OData.Client.Common
             }
             return query;
         }
+
         public static Expression GetLambdaBody<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
         {
-            Expression result = null;
+            Expression result = GetValidExpression(expression);
 
-            if (expression.NodeType == ExpressionType.Lambda)
-            {
-                result = expression.Body as UnaryExpression;
-                if (result == null)
-                {
-                    result = expression.Body as MemberExpression;
-                }
-            }
-           
             if (result == null)
             {
                 throw new InvalidExpressionException("Expression is not a lambda expression.");
+            }
+            return result;
+        }
+
+        public static Expression GetValidExpression(LambdaExpression expression)
+        {
+            Expression result = null;
+            Expression opEvalResult = null;
+
+            if (expression.NodeType == ExpressionType.Lambda)
+            {
+                if (expression.Body.NodeType == ExpressionType.Convert)
+                {
+                    opEvalResult = ((UnaryExpression)expression.Body).Operand as Expression;
+                    if (opEvalResult.NodeType.IsLogicalOperator())
+                    {
+                        result = expression.Body as UnaryExpression;
+                    }
+                    else
+                    {
+                        if (opEvalResult.NodeType == ExpressionType.MemberAccess)
+                        {
+                            result = opEvalResult;
+                        }
+                    }
+                }
+                else if (expression.Body.NodeType == ExpressionType.MemberAccess)
+                {
+                    result = expression.Body as MemberExpression;
+                }
             }
             return result;
         }

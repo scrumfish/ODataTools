@@ -8,7 +8,7 @@ namespace Scrumfish.OData.Client.Tests.v4
     public class Query_OrderBy_Tests
     {
         [TestMethod]
-        public void OrderBy_AddsExpectedParameterName_Test()
+        public void OrderBy_AddsExpectedStringParameterName_Test()
         {
             var expected = "?$orderBy=";
             var result = "?".OrderBy<Person>(p => p.LastName);
@@ -16,13 +16,28 @@ namespace Scrumfish.OData.Client.Tests.v4
         }
 
         [TestMethod]
-        public void OrderBy_AddsExpectedParameterNameWithAmpersand_Test()
+        public void OrderBy_AddsExpectedIntParameter_Test()
+        {
+            var expected = "?$orderBy=";
+            var result = "?".OrderBy<Person>(p => p.Age);
+            Assert.IsTrue(result.StartsWith(expected));
+        }
+
+        [TestMethod]
+        public void OrderBy_AddsExpectedStringParameterNameWithAmpersand_Test()
         {
             var expected = "anyparam&$orderBy=";
             var result = "anyparam".OrderBy<Person>(p => p.LastName);
             Assert.IsTrue(result.StartsWith(expected));
         }
 
+        [TestMethod]
+        public void OrderBy_AddsExpectedIntParameterWithAmpersand_Test()
+        {
+            var expected = "anyparam&$orderBy=";
+            var result = "anyparam".OrderBy<Person>(p => p.Age);
+            Assert.IsTrue(result.StartsWith(expected));
+        }
 
         //[TestMethod]
         //public void Orderby_Ascending_Test()
