@@ -29,5 +29,14 @@ namespace Scrumfish.OData.Client.v4
                .AppendFormat("$skip={0}", skipNum)
                .ToString();
         }
+
+        public static string OrderBy<T>(this string target, Expression<Func<T, object>> action) where T : class
+        {
+            return target.GetStartQuery()
+              .Append("$orderBy=")
+              .Append(action.GetLambdaBody().ParseExpression())
+              .ToString();
+        }
     }
 }
+
