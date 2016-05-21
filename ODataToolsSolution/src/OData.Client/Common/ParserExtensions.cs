@@ -12,7 +12,7 @@ namespace Scrumfish.OData.Client.Common
             return expression.Body.ParseExpression();
         }
 
-        public static string ParseExpression(this Expression expression)
+        private static string ParseExpression(this Expression expression)
         {
             if (expression.NodeType.IsUnary())
             {
@@ -33,7 +33,7 @@ namespace Scrumfish.OData.Client.Common
             throw new InvalidExpressionException("Expression is not parsable.");
         }
 
-        public static string AsOperator(this ExpressionType type)
+        private static string AsOperator(this ExpressionType type)
         {
             switch (type)
             {
@@ -49,41 +49,37 @@ namespace Scrumfish.OData.Client.Common
                     return " lt ";
                 case ExpressionType.LessThanOrEqual:
                     return " le ";
+                case ExpressionType.AndAlso:
+                    return " and ";
+                case ExpressionType.OrElse:
+                    return " or ";
             }
             throw new InvalidExpressionOperatorException("Unknown operator in the expression.");
         }
-
-        public static bool IsCompound(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.AndAlso;
-        }
-
-        public static bool IsLambda(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.Lambda;
-        }
-
-        public static bool IsUnary(this ExpressionType expressionType)
+        
+        private static bool IsUnary(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Convert;
         }
 
-        public static bool IsLogicalOperator(this ExpressionType expressionType)
+        private static bool IsLogicalOperator(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Equal
                    || expressionType == ExpressionType.GreaterThan
                    || expressionType == ExpressionType.GreaterThanOrEqual
                    || expressionType == ExpressionType.NotEqual
                    || expressionType == ExpressionType.LessThan
-                   || expressionType == ExpressionType.LessThanOrEqual;
+                   || expressionType == ExpressionType.LessThanOrEqual
+                   || expressionType == ExpressionType.AndAlso
+                   || expressionType == ExpressionType.OrElse;
         }
 
-        public static bool IsMemberAccess(this ExpressionType expressionType)
+        private static bool IsMemberAccess(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.MemberAccess;
         }
 
-        public static bool IsConstant(this ExpressionType expressionType)
+        private static bool IsConstant(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Constant;
         }
@@ -144,9 +140,11 @@ namespace Scrumfish.OData.Client.Common
                 throw new InvalidExpressionException("Could not find logical expression to parse.");
             }
             return new StringBuilder()
+                .Append('(')
                 .Append(logicalExpression.Left.ParseExpression())
                 .Append(logicalExpression.NodeType.AsOperator())
                 .Append(logicalExpression.Right.ParseExpression())
+                .Append(')')
                 .ToString();
         }
 

@@ -2,7 +2,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Scrumfish.OData.Client.Tests.TestObjects;
 
 namespace Scrumfish.OData.Client.Tests
 {
@@ -17,7 +16,7 @@ namespace Scrumfish.OData.Client.Tests
         {
             var type = Type.GetType("Scrumfish.OData.Client.Common.ParserExtensions, Scrumfish.OData.Client");
             Assert.IsNotNull(type);
-            _asOperator = type.GetMethod("AsOperator", BindingFlags.Public | BindingFlags.Static);
+            _asOperator = type.GetMethod("AsOperator", BindingFlags.NonPublic | BindingFlags.Static);
         }
         
         private string AsOperator(ExpressionType type)
@@ -60,6 +59,12 @@ namespace Scrumfish.OData.Client.Tests
         public void AsOperator_ReturnsLessThanOrEqual_Test()
         {
             Assert.AreEqual(" le ", AsOperator(ExpressionType.LessThanOrEqual));
+        }
+
+        [TestMethod]
+        public void AsOperator_ReturnsAnd_Test()
+        {
+            Assert.AreEqual(" and ", AsOperator(ExpressionType.AndAlso));
         }
     }
 }

@@ -55,7 +55,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .OrderBy(p => p.LastName)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .OrderBy(p => p.LastName)
                 .ThenBy(p => p.FirstName)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -85,7 +85,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .OrderByDesc(p => p.FirstName)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -96,7 +96,7 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .OrderBy(p => p.FirstName)
                 .ThenByDesc(p => p.Birthday)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
