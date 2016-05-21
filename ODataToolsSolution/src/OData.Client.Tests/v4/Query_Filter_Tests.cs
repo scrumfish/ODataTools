@@ -31,52 +31,71 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Filter_ReturnsIntegerEqualityOperation_Test()
         {
-            var expected = "?$filter=Age eq 5";
+            var expected = "?$filter=(Age eq 5)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.Age == 5)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected,result);
         }
 
         [TestMethod]
         public void Filter_ReturnsNullableLongEqualityOperation_Test()
         {
-            var expected = "?$filter=SomeBigNumber eq 51254411144";
+            var expected = "?$filter=(SomeBigNumber eq 51254411144)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.SomeBigNumber == 51254411144)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
         public void Filter_ReturnsNullableIntegerEqualityOperationNull_Test()
         {
-            var expected = "?$filter=SomeBigNumber eq null";
+            var expected = "?$filter=(SomeBigNumber eq null)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.SomeBigNumber == null)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
         public void Filter_ReturnsStringEqualityOperation_Test()
         {
-            var expected = "?$filter=FirstName eq 'Steve'";
+            var expected = "?$filter=(FirstName eq 'Steve')";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.FirstName == "Steve")
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
         public void Filter_ReturnsStringEqualityOperationNull_Test()
         {
-            var expected = "?$filter=FirstName eq null";
+            var expected = "?$filter=(FirstName eq null)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.FirstName == null)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(expected, result);
         }
-        
+
+        [TestMethod]
+        public void Filter_ReturnsCompundAndExpression_Test()
+        {
+            var expected = "?$filter=((FirstName eq 'Steve') and (Age gt 18))";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.FirstName == "Steve" && p.Age > 18)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsComplexCompundExpression_Test()
+        {
+            var expected = "?$filter=(((FirstName eq 'Steve') and (Age gt 18)) or (LastName eq 'Smith'))";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => (p.FirstName == "Steve" && p.Age > 18) || p.LastName == "Smith")
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
     }
 }

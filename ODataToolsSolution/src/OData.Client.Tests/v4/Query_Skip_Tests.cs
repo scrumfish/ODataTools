@@ -28,5 +28,15 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .ToString();
             Assert.IsTrue(result.StartsWith(expected));
         }
+
+        [TestMethod]
+        public void Skip_AddsExpectedParameterNameAndValue_Test()
+        {
+            var expected = "?$skip=5";
+            var result = "?".CreateODataQuery<Person>()
+                .Skip(5)
+                .ToString();
+            Assert.AreEqual(expected,result);
+        }
     }
 }

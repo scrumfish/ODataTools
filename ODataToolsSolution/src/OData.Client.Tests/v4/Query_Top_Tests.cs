@@ -27,5 +27,15 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .ToString();
             Assert.IsTrue(result.StartsWith(expected));
         }
+
+        [TestMethod]
+        public void Top_AddsExpectedParameterNameAndValue_Test()
+        {
+            var expected = "?$top=5";
+            var result = "?".CreateODataQuery<Person>()
+                .Top(5)
+                .ToString();
+            Assert.AreEqual(expected,result);
+        }
     }
 }
