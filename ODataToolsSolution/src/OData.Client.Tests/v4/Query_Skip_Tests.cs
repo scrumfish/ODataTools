@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
 using Scrumfish.OData.Client.v4;
 
@@ -11,7 +13,9 @@ namespace Scrumfish.OData.Client.Tests.v4
         public void Skip_AddsExpectedParameterName_Test()
         {
             var expected = "?$skip=";
-            var result = "?".Skip(5);
+            var result = "?".CreateODataQuery<Person>()
+                .Skip(5)
+                .ToString();
             Assert.IsTrue(result.StartsWith(expected));
         }
 
@@ -19,7 +23,9 @@ namespace Scrumfish.OData.Client.Tests.v4
         public void Skip_AddsExpectedParameterNameWithAmpersand_Test()
         {
             var expected = "hello&$skip=";
-            var result = "hello".Skip(5);
+            var result = "hello".CreateODataQuery<Person>()
+                .Skip(5)
+                .ToString();
             Assert.IsTrue(result.StartsWith(expected));
         }
     }

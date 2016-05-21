@@ -7,15 +7,14 @@ namespace Scrumfish.OData.Client.Common
 {
     internal static class ParserExtensions
     {
-        public static StringBuilder GetStartQuery(this string target)
+        
+        public static StringBuilder GetStartQuery(this StringBuilder target)
         {
-            var query = new StringBuilder(target);
-
-            if (!target.EndsWith("?"))
+            if (!target.ToString().EndsWith("?"))
             {
-                query.Append('&');
+                target.Append('&');
             }
-            return query;
+            return target;
         }
 
         public static Expression GetLambdaBody<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
