@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Text;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scrumfish.OData.Client.Tests.TestObjects;
@@ -11,7 +10,6 @@ namespace Scrumfish.OData.Client.Tests
     [TestClass]
     public class ParserExtensions_Tests
     {
-        private MethodInfo _getStartQuery;
         private MethodInfo _getLambdaBody;
         private MethodInfo _asOperator;
 
@@ -20,16 +18,10 @@ namespace Scrumfish.OData.Client.Tests
         {
             var type = Type.GetType("Scrumfish.OData.Client.Common.ParserExtensions, Scrumfish.OData.Client");
             Assert.IsNotNull(type);
-            _getStartQuery = type.GetMethod("GetStartQuery", BindingFlags.Public | BindingFlags.Static);
             _getLambdaBody = type.GetMethod("GetLambdaBody", BindingFlags.Public | BindingFlags.Static);
             _asOperator = type.GetMethod("AsOperator", BindingFlags.Public | BindingFlags.Static);
         }
-
-        private StringBuilder GetStartQuery(string target)
-        {
-            return _getStartQuery.Invoke(null, new[] {target}) as StringBuilder;
-        }
-
+        
         private UnaryExpression GetLambdaBody<TParam, TResult>(Expression<Func<TParam, TResult>> expression)
         {
             var method = _getLambdaBody.MakeGenericMethod(typeof (TParam), typeof (TResult));
@@ -40,22 +32,6 @@ namespace Scrumfish.OData.Client.Tests
         {
             object o = type;
             return _asOperator.Invoke(null, new[] {o}) as string;
-        }
-
-        [TestMethod]
-        public void GetStartQuery_ReturnsSameStringIfQuestionMarkEndsString_Test()
-        {
-            var expected = "yo?";
-            var result = GetStartQuery("yo?");
-            Assert.AreEqual(expected, result.ToString());
-        }
-
-        [TestMethod]
-        public void GetStartQuery_ReturnsAmpersandStringIfQuestionMarkEndsString_Test()
-        {
-            var expected = "yo&";
-            var result = GetStartQuery("yo");
-            Assert.AreEqual(expected, result.ToString());
         }
 
         [TestMethod]
@@ -93,7 +69,6 @@ namespace Scrumfish.OData.Client.Tests
         public void AsOperator_ReturnsLessThan_Test()
         {
             Assert.AreEqual(" lt ", AsOperator(ExpressionType.LessThan));
-
         }
 
         [TestMethod]
