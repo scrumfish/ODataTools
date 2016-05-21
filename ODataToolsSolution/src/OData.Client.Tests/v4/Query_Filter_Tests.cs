@@ -77,6 +77,6 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .ToString();
             Assert.IsTrue(result.StartsWith(expected));
         }
-
+        
     }
 }

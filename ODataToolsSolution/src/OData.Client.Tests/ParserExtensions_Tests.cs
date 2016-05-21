@@ -10,7 +10,6 @@ namespace Scrumfish.OData.Client.Tests
     [TestClass]
     public class ParserExtensions_Tests
     {
-        private MethodInfo _getLambdaBody;
         private MethodInfo _asOperator;
 
         [TestInitialize]
@@ -18,27 +17,13 @@ namespace Scrumfish.OData.Client.Tests
         {
             var type = Type.GetType("Scrumfish.OData.Client.Common.ParserExtensions, Scrumfish.OData.Client");
             Assert.IsNotNull(type);
-            _getLambdaBody = type.GetMethod("GetLambdaBody", BindingFlags.Public | BindingFlags.Static);
             _asOperator = type.GetMethod("AsOperator", BindingFlags.Public | BindingFlags.Static);
         }
         
-        private UnaryExpression GetLambdaBody<TParam, TResult>(Expression<Func<TParam, TResult>> expression)
-        {
-            var method = _getLambdaBody.MakeGenericMethod(typeof (TParam), typeof (TResult));
-            return method.Invoke(null, new[] {expression}) as UnaryExpression;
-        }
-
         private string AsOperator(ExpressionType type)
         {
             object o = type;
             return _asOperator.Invoke(null, new[] {o}) as string;
-        }
-
-        [TestMethod]
-        public void GetLambdaBody_ReturnsExpressionBodyForUnaryExpression_Test()
-        {
-            var result = GetLambdaBody<Person, object>(p => p.Age == 42);
-            Assert.IsNotNull(result);
         }
 
         [TestMethod]
