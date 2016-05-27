@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Common\InvalidExpressionException.cs" />
     <Compile Include="Common\InvalidExpressionOperatorException.cs" />
+    <Compile Include="Common\InvalidOperationException.cs" />
+    <Compile Include="Common\ODataQuery.cs" />
     <Compile Include="Common\ParserExtensions.cs" />
     <Compile Include="v4\Query.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

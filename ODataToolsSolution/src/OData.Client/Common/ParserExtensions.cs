@@ -7,56 +7,30 @@ namespace Scrumfish.OData.Client.Common
 {
     internal static class ParserExtensions
     {
-        public static StringBuilder GetStartQuery(this string target)
+        public static string ParseExpression<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
         {
-            var query = new StringBuilder(target);
-
-            if (!target.EndsWith("?"))
-            {
-                query.Append('&');
-            }
-            return query;
+            return expression.Body.ParseExpression();
         }
 
-        public static Expression GetLambdaBody<TParam, TResult>(this Expression<Func<TParam, TResult>> expression)
+        public static string ParseExpression(this Expression expression)
         {
-            Expression result = GetValidExpression(expression);
-
-            if (result == null)
+            if (expression.NodeType.IsUnary())
             {
-                throw new InvalidExpressionException("Expression is not a lambda expression.");
+                return expression.ParseUnaryExpression();
             }
-            return result;
-        }
-
-        public static Expression GetValidExpression(LambdaExpression expression)
-        {
-            Expression result = null;
-            Expression opEvalResult = null;
-
-            if (expression.NodeType == ExpressionType.Lambda)
+            if (expression.NodeType.IsLogicalOperator())
             {
-                if (expression.Body.NodeType == ExpressionType.Convert)
-                {
-                    opEvalResult = ((UnaryExpression)expression.Body).Operand as Expression;
-                    if (opEvalResult.NodeType.IsLogicalOperator())
-                    {
-                        result = expression.Body as UnaryExpression;
-                    }
-                    else
-                    {
-                        if (opEvalResult.NodeType == ExpressionType.MemberAccess)
-                        {
-                            result = opEvalResult;
-                        }
-                    }
-                }
-                else if (expression.Body.NodeType == ExpressionType.MemberAccess)
-                {
-                    result = expression.Body as MemberExpression;
-                }
+                return expression.ParseLogicalExpression();
             }
-            return result;
+            if (expression.NodeType.IsMemberAccess())
+            {
+                return expression.ParseMemberExpression();
+            }
+            if (expression.NodeType.IsConstant())
+            {
+                return expression.ParseConstantExpression();
+            }
+            throw new InvalidExpressionException("Expression is not parsable.");
         }
 
         public static string AsOperator(this ExpressionType type)
@@ -79,6 +53,21 @@ namespace Scrumfish.OData.Client.Common
             throw new InvalidExpressionOperatorException("Unknown operator in the expression.");
         }
 
+        public static bool IsCompound(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.AndAlso;
+        }
+
+        public static bool IsLambda(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.Lambda;
+        }
+
+        public static bool IsUnary(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.Convert;
+        }
+
         public static bool IsLogicalOperator(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Equal
@@ -97,27 +86,6 @@ namespace Scrumfish.OData.Client.Common
         public static bool IsConstant(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Constant;
-        }
-
-        public static string ParseExpression(this Expression expression)
-        {
-            if (expression.NodeType == ExpressionType.Convert)
-            {
-                return expression.ParseUnaryExpression();
-            }
-            if (expression.NodeType.IsLogicalOperator())
-            {
-                return expression.ParseLogicalExpression();
-            }
-            if (expression.NodeType.IsMemberAccess())
-            {
-                return expression.ParseMemberExpression();
-            }
-            if (expression.NodeType.IsConstant())
-            {
-                return expression.ParseConstantExpression();
-            }
-            return string.Empty;
         }
 
         private static string ParseConstantExpression(this Expression expression)
@@ -150,7 +118,7 @@ namespace Scrumfish.OData.Client.Common
 
         private static string NumberOrNull<T>(this object value)
         {
-            return value == null ? "null" : ((T) value).ToString();
+            return value == null ? "null" : ((T)value).ToString();
         }
 
         private static string StringOrNull(this object value)
