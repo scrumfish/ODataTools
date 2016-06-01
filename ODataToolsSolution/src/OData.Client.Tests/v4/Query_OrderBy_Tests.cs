@@ -83,7 +83,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         {
             var expected = "?$orderBy=LastName desc";
             var result = "?".CreateODataQuery<Person>()
-                .OrderByDesc(p => p.FirstName)
+                .OrderByDesc(p => p.LastName)
                 .ToString();
             Assert.AreEqual(expected, result);
         }
@@ -91,7 +91,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Orderby_AscendingAndDescendingMix_Test()
         {
-            var expected = "?$orderBy=LastName,Birthday desc";
+            var expected = "?$orderBy=FirstName,Birthday desc";
             var result = "?".CreateODataQuery<Person>()
                 .OrderBy(p => p.FirstName)
                 .ThenByDesc(p => p.Birthday)
@@ -100,11 +100,25 @@ namespace Scrumfish.OData.Client.Tests.v4
         }
 
         [TestMethod]
-        [ExpectedException(typeof (InvalidExpressionException))]
-        public void ThenBy_ThrowsExcpetionIfCallWithoutOrderOperation_Test()
+        public void Orderby_DescendingFirstAndAscendingMix_Test()
         {
-            string.Empty.CreateODataQuery<Person>()
-                .ThenBy(p => p.LastName);
+            var expected = "?$orderBy=LastName desc,Birthday";
+            var result = "?".CreateODataQuery<Person>()
+                .OrderByDesc(p => p.LastName)
+                .ThenBy(p => p.Birthday)
+                .ToString();
+            Assert.IsTrue(result.StartsWith(expected));
+        }
+
+        [TestMethod]
+        public void Orderby_ConsecutiveDescendingMix_Test()
+        {
+            var expected = "?$orderBy=Age desc,LastName desc";
+            var result = "?".CreateODataQuery<Person>()
+                .OrderByDesc(p => p.Age)
+                .ThenByDesc(p => p.LastName)
+                .ToString();
+            Assert.IsTrue(result.StartsWith(expected));
         }
 
         [TestMethod]
@@ -115,6 +129,24 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .OrderBy(p => p.Birthday)
                 .Filter(p => p.Age > 42)
                 .ThenBy(p => p.LastName);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidExpressionException))]
+        public void ThenBy_ThrowsExceptionIfCallWithoutOrderOperation_Test()
+        {
+            string.Empty.CreateODataQuery<Person>()
+                .ThenBy(p => p.LastName);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ThenBy_ThrowsExceptionIfCallWithOrderByThenByOrderBy_Test()
+        {
+            "?".CreateODataQuery<Person>()
+                .OrderBy(p => p.Birthday)
+                .ThenBy(p => p.Age)
+                .OrderBy(p => p.LastName);
         }
 
     }

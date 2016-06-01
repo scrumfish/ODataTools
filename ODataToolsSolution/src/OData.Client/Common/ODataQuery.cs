@@ -77,6 +77,12 @@ namespace Scrumfish.OData.Client.Common
                 .Append(expression);
             return this;
         }
+
+        internal ODataQuery<T> AppendDesc()
+        {
+            _uri.Append(" desc");
+            return this;
+        }
     }
 
     public static class ODataQueryBuilder
