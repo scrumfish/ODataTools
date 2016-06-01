@@ -78,9 +78,9 @@ namespace Scrumfish.OData.Client.Common
             return this;
         }
 
-        internal ODataQuery<T> AppendDesc()
+        internal ODataQuery<T> AppendModifier<TV>(TV modifier)
         {
-            _uri.Append(" desc");
+            _uri.Append(modifier);
             return this;
         }
     }
