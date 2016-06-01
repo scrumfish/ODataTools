@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -30,6 +32,10 @@ namespace Scrumfish.OData.Client.Common
             {
                 return expression.ParseConstantExpression();
             }
+            if (expression.NodeType.IsCall())
+            {
+                return expression.ParseCallExpression();
+            }
             throw new InvalidExpressionException("Expression is not parsable.");
         }
 
@@ -56,7 +62,7 @@ namespace Scrumfish.OData.Client.Common
             }
             throw new InvalidExpressionOperatorException("Unknown operator in the expression.");
         }
-        
+
         private static bool IsUnary(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Convert;
@@ -74,6 +80,11 @@ namespace Scrumfish.OData.Client.Common
                    || expressionType == ExpressionType.OrElse;
         }
 
+        private static bool IsCall(this ExpressionType expressionType)
+        {
+            return expressionType == ExpressionType.Call;
+        }
+
         private static bool IsMemberAccess(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.MemberAccess;
@@ -82,6 +93,78 @@ namespace Scrumfish.OData.Client.Common
         private static bool IsConstant(this ExpressionType expressionType)
         {
             return expressionType == ExpressionType.Constant;
+        }
+
+        private enum ParameterOrder
+        {
+            TargetFirst,
+            TargetLast
+        }
+
+        private class MethodCall
+        {
+            public string Name { get; set; }
+            public ParameterOrder Order { get; set; }
+        }
+
+        private static Dictionary<string, MethodCall> _methods = new Dictionary<string, MethodCall>
+        {
+            { "EndsWith", new MethodCall {Name = "endswith", Order = ParameterOrder.TargetFirst}},
+            { "StartsWith", new MethodCall {Name = "startswith", Order = ParameterOrder.TargetFirst}},
+            { "Contains", new MethodCall {Name = "substringof", Order = ParameterOrder.TargetLast} },
+            { "Substring" , new MethodCall {Name = "substring", Order = ParameterOrder.TargetFirst}},
+            { "Length" , new MethodCall {Name = "length", Order = ParameterOrder.TargetFirst}}
+        };
+
+        private static string ParseCallExpression(this Expression expression)
+        {
+            var callExpression = expression as MethodCallExpression;
+            if (callExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find a call expression to parse.");
+            }
+            MethodCall method;
+            _methods.TryGetValue(callExpression.Method.Name, out method);
+            if (method == null)
+            {
+                throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
+            }
+            var target = callExpression.Object.ParseMemberExpression();
+            var parameters = callExpression.Arguments.Select(a => a.ParseExpression()).ToList();
+            return BuildMethodCall(method.Name, method.Order, target, parameters);
+        }
+
+        private static string BuildMethodCall(string method, ParameterOrder order, string target, List<string> parameters)
+        {
+            return new StringBuilder()
+                .Append(method)
+                .Append('(')
+                .AppendParameters(order, target, parameters)
+                .Append(')')
+                .ToString();
+        }
+
+        private static StringBuilder AppendParameters(this StringBuilder result, ParameterOrder order, string target, List<string> parameters)
+        {
+            if (order == ParameterOrder.TargetFirst)
+            {
+                result.Append(target);
+                if (parameters.Any())
+                {
+                    result.Append(',')
+                        .Append(string.Join(",", parameters));
+                }
+            }
+            else
+            {
+                if (parameters.Any())
+                {
+                    result.Append(string.Join(",", parameters))
+                        .Append(',');
+                }
+                result.Append(target);
+            }
+            return result;
         }
 
         private static string ParseConstantExpression(this Expression expression)
@@ -129,7 +212,39 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidExpressionException("Could not find a member expression to parse.");
             }
+            if (memberExpression.Expression.IsKnownType()
+                && memberExpression.Member.IsKnownProperty())
+            {
+                return memberExpression.ParseCallExpressionWithKnownProperty();
+            }
             return memberExpression.Member.Name;
+        }
+
+        private static string ParseCallExpressionWithKnownProperty(this MemberExpression expression)
+        {
+            MethodCall method;
+            _methods.TryGetValue(expression.Member.Name, out method);
+            if (method == null)
+            {
+                throw new InvalidExpressionException($"The method {expression.Member.Name} could not be mapped.");
+            }
+
+            return new StringBuilder()
+                .Append(method.Name)
+                .Append('(')
+                .Append(expression.Expression.ParseExpression())
+                .Append(')')
+                .ToString();
+        }
+
+        private static bool IsKnownType(this Expression expression)
+        {
+            return expression.Type == typeof (string);
+        }
+
+        private static bool IsKnownProperty(this MemberInfo expression)
+        {
+            return _methods.ContainsKey(expression.Name);
         }
 
         private static string ParseLogicalExpression(this Expression expression)
