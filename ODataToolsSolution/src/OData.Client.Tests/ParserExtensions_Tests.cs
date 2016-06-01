@@ -66,5 +66,11 @@ namespace Scrumfish.OData.Client.Tests
         {
             Assert.AreEqual(" and ", AsOperator(ExpressionType.AndAlso));
         }
+
+        [TestMethod]
+        public void AsOperator_ReturnsOr_Test()
+        {
+            Assert.AreEqual(" or ", AsOperator(ExpressionType.OrElse));
+        }
     }
 }

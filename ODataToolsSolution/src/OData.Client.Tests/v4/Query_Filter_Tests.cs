@@ -97,5 +97,65 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .ToString();
             Assert.AreEqual(expected, result);
         }
+
+        [TestMethod]
+        public void Filter_ReturnsEndsWithExpression_Test()
+        {
+            var expected = "?$filter=endswith(LastName,'eece')";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.LastName.EndsWith("eece"))
+                .ToString();
+            Assert.AreEqual(expected,result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsStartsWithExpression_Test()
+        {
+            var expected = "?$filter=startswith(LastName,'Re')";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.LastName.StartsWith("Re"))
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsSubstringOfExpression_Test()
+        {
+            var expected = "?$filter=substringof('ece',LastName)";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.LastName.Contains("ece"))
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsSubstringOneParamExpression_Test()
+        {
+            var expected = "?$filter=(substring(LastName,2) eq 'eece')";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.LastName.Substring(2) == "eece")
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsSubstringTwoParamExpression_Test()
+        {
+            var expected = "?$filter=(substring(LastName,4,3) eq 'eec')";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.LastName.Substring(4, 3) == "eec")
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsLengthExpression_Test()
+        {
+            var expected = "?$filter=(length(FirstName) gt 6)";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.FirstName.Length > 6)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
     }
 }
