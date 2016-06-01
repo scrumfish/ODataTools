@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -13,30 +12,16 @@ namespace Scrumfish.OData.Client.Common
         {
             return expression.Body.ParseExpression();
         }
-
+        
         private static string ParseExpression(this Expression expression)
         {
-            if (expression.NodeType.IsUnary())
+            Func<Expression, string> method;
+            ExpressionParsers.TryGetValue(expression.NodeType, out method);
+            if (method == null)
             {
-                return expression.ParseUnaryExpression();
+                throw new InvalidExpressionException("Expression is not parsable.");
             }
-            if (expression.NodeType.IsLogicalOperator())
-            {
-                return expression.ParseLogicalExpression();
-            }
-            if (expression.NodeType.IsMemberAccess())
-            {
-                return expression.ParseMemberExpression();
-            }
-            if (expression.NodeType.IsConstant())
-            {
-                return expression.ParseConstantExpression();
-            }
-            if (expression.NodeType.IsCall())
-            {
-                return expression.ParseCallExpression();
-            }
-            throw new InvalidExpressionException("Expression is not parsable.");
+            return method(expression);
         }
 
         private static string AsOperator(this ExpressionType type)
@@ -63,59 +48,6 @@ namespace Scrumfish.OData.Client.Common
             throw new InvalidExpressionOperatorException("Unknown operator in the expression.");
         }
 
-        private static bool IsUnary(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.Convert;
-        }
-
-        private static bool IsLogicalOperator(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.Equal
-                   || expressionType == ExpressionType.GreaterThan
-                   || expressionType == ExpressionType.GreaterThanOrEqual
-                   || expressionType == ExpressionType.NotEqual
-                   || expressionType == ExpressionType.LessThan
-                   || expressionType == ExpressionType.LessThanOrEqual
-                   || expressionType == ExpressionType.AndAlso
-                   || expressionType == ExpressionType.OrElse;
-        }
-
-        private static bool IsCall(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.Call;
-        }
-
-        private static bool IsMemberAccess(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.MemberAccess;
-        }
-
-        private static bool IsConstant(this ExpressionType expressionType)
-        {
-            return expressionType == ExpressionType.Constant;
-        }
-
-        private enum ParameterOrder
-        {
-            TargetFirst,
-            TargetLast
-        }
-
-        private class MethodCall
-        {
-            public string Name { get; set; }
-            public ParameterOrder Order { get; set; }
-        }
-
-        private static Dictionary<string, MethodCall> _methods = new Dictionary<string, MethodCall>
-        {
-            { "EndsWith", new MethodCall {Name = "endswith", Order = ParameterOrder.TargetFirst}},
-            { "StartsWith", new MethodCall {Name = "startswith", Order = ParameterOrder.TargetFirst}},
-            { "Contains", new MethodCall {Name = "substringof", Order = ParameterOrder.TargetLast} },
-            { "Substring" , new MethodCall {Name = "substring", Order = ParameterOrder.TargetFirst}},
-            { "Length" , new MethodCall {Name = "length", Order = ParameterOrder.TargetFirst}}
-        };
-
         private static string ParseCallExpression(this Expression expression)
         {
             var callExpression = expression as MethodCallExpression;
@@ -124,7 +56,7 @@ namespace Scrumfish.OData.Client.Common
                 throw new InvalidExpressionException("Could not find a call expression to parse.");
             }
             MethodCall method;
-            _methods.TryGetValue(callExpression.Method.Name, out method);
+            Methods.TryGetValue(callExpression.Method.Name, out method);
             if (method == null)
             {
                 throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
@@ -183,18 +115,6 @@ namespace Scrumfish.OData.Client.Common
             return convertToString(memberConstant.Value);
         }
 
-        private static readonly Dictionary<Type, Func<object, string>> TypeConverter = new Dictionary
-            <Type, Func<object, string>>
-        {
-            {typeof (int), (o) => o.NumberOrNull<int>()},
-            {typeof (short), (o) => o.NumberOrNull<short>()},
-            {typeof (long), (o) => o.NumberOrNull<long>()},
-            {typeof (int?), (o) => o.NumberOrNull<int?>()},
-            {typeof (short?), (o) => o.NumberOrNull<short?>()},
-            {typeof (long?), (o) => o.NumberOrNull<long?>()},
-            {typeof (string), (o) => o.StringOrNull()}
-        };
-
         private static string NumberOrNull<T>(this object value)
         {
             return value == null ? "null" : ((T)value).ToString();
@@ -202,7 +122,7 @@ namespace Scrumfish.OData.Client.Common
 
         private static string StringOrNull(this object value)
         {
-            return value == null ? "null" : $"'{((string)value)}'";
+            return value == null ? "null" : $"'{value}'";
         }
 
         private static string ParseMemberExpression(this Expression expression)
@@ -212,8 +132,9 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidExpressionException("Could not find a member expression to parse.");
             }
-            if (memberExpression.Expression.IsKnownType()
-                && memberExpression.Member.IsKnownProperty())
+            MethodCall method;
+            Methods.TryGetValue(memberExpression.Member.Name, out method);
+            if (method?.SupportedTypes != null && method.SupportedTypes.Contains(memberExpression.Expression.Type))
             {
                 return memberExpression.ParseCallExpressionWithKnownProperty();
             }
@@ -223,7 +144,7 @@ namespace Scrumfish.OData.Client.Common
         private static string ParseCallExpressionWithKnownProperty(this MemberExpression expression)
         {
             MethodCall method;
-            _methods.TryGetValue(expression.Member.Name, out method);
+            Methods.TryGetValue(expression.Member.Name, out method);
             if (method == null)
             {
                 throw new InvalidExpressionException($"The method {expression.Member.Name} could not be mapped.");
@@ -237,16 +158,6 @@ namespace Scrumfish.OData.Client.Common
                 .ToString();
         }
 
-        private static bool IsKnownType(this Expression expression)
-        {
-            return expression.Type == typeof (string);
-        }
-
-        private static bool IsKnownProperty(this MemberInfo expression)
-        {
-            return _methods.ContainsKey(expression.Name);
-        }
-
         private static string ParseLogicalExpression(this Expression expression)
         {
             var logicalExpression = expression as BinaryExpression;
@@ -254,13 +165,29 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidExpressionException("Could not find logical expression to parse.");
             }
+
+            var rightOverride = logicalExpression.Left.GetRightOperandOverride();
+
             return new StringBuilder()
                 .Append('(')
                 .Append(logicalExpression.Left.ParseExpression())
                 .Append(logicalExpression.NodeType.AsOperator())
-                .Append(logicalExpression.Right.ParseExpression())
+                .Append(rightOverride(logicalExpression.Right.ParseExpression()))
                 .Append(')')
                 .ToString();
+        }
+
+        private static Func<string, string> GetRightOperandOverride(this Expression expression)
+        {
+            var methodExpression = expression as MemberExpression;
+            if (methodExpression == null) return s => s;
+            MethodCall method;
+            Methods.TryGetValue(methodExpression.Member.Name, out method);
+            if (method?.RightOperandConverter != null)
+            {
+                return method.RightOperandConverter;
+            }
+            return s => s;
         }
 
         private static string ParseUnaryExpression(this Expression expression)
@@ -272,5 +199,112 @@ namespace Scrumfish.OData.Client.Common
             }
             return unaryExpression.Operand.ParseExpression();
         }
+
+        private static string ParseAddExpression(this Expression expression)
+        {
+            var binaryExpression = expression as BinaryExpression;
+            if (binaryExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find binary expression to parse.");
+            }
+            MethodCall method;
+            Methods.TryGetValue(binaryExpression.Method.Name, out method);
+            if (method == null)
+            {
+                throw new InvalidExpressionException($"The method {binaryExpression.Method.Name} could not be mapped.");
+            }
+            return new StringBuilder()
+                .Append(method.Name)
+                .Append('(')
+                .Append(binaryExpression.Left.ParseExpression())
+                .Append(',')
+                .Append(binaryExpression.Right.ParseExpression())
+                .Append(')')
+                .ToString();
+        }
+
+        private static string ConvertToFractionalSeconds(string value)
+        {
+            int milliseconds;
+            if (int.TryParse(value, out milliseconds))
+            {
+                decimal fractional = milliseconds;
+                fractional /= 1000;
+                return fractional.ToString().TrimStart('0');
+            }
+            return value;
+        }
+
+        private enum ParameterOrder
+        {
+            TargetFirst,
+            TargetLast
+        }
+
+        private class MethodCall
+        {
+            public string Name { get; set; }
+            public ParameterOrder Order { get; set; }
+            public IList<Type> SupportedTypes { get; set; }
+            public Func<string,string> RightOperandConverter { get; set; } 
+        }
+
+        private static readonly Dictionary<ExpressionType, Func<Expression, string>> ExpressionParsers = new Dictionary
+            <ExpressionType, Func<Expression, string>>
+        {
+            {ExpressionType.Convert, ParseUnaryExpression},
+            {ExpressionType.Equal, ParseLogicalExpression},
+            {ExpressionType.GreaterThan, ParseLogicalExpression},
+            {ExpressionType.GreaterThanOrEqual, ParseLogicalExpression},
+            {ExpressionType.NotEqual, ParseLogicalExpression},
+            {ExpressionType.LessThan, ParseLogicalExpression},
+            {ExpressionType.LessThanOrEqual, ParseLogicalExpression},
+            {ExpressionType.AndAlso, ParseLogicalExpression},
+            {ExpressionType.OrElse, ParseLogicalExpression},
+            {ExpressionType.MemberAccess, ParseMemberExpression},
+            {ExpressionType.Constant, ParseConstantExpression},
+            {ExpressionType.Call, ParseCallExpression},
+            {ExpressionType.Add, ParseAddExpression},
+        };
+
+        private static readonly Dictionary<Type, Func<object, string>> TypeConverter = new Dictionary
+            <Type, Func<object, string>>
+        {
+            {typeof (int), (o) => o.NumberOrNull<int>()},
+            {typeof (short), (o) => o.NumberOrNull<short>()},
+            {typeof (long), (o) => o.NumberOrNull<long>()},
+            {typeof (int?), (o) => o.NumberOrNull<int?>()},
+            {typeof (short?), (o) => o.NumberOrNull<short?>()},
+            {typeof (long?), (o) => o.NumberOrNull<long?>()},
+            {typeof (string), (o) => o.StringOrNull()},
+            {typeof (char), (o) =>  o.StringOrNull() },
+            {typeof (char?), (o) =>  o.StringOrNull() }
+        };
+
+        private static readonly Dictionary<string, MethodCall> Methods = new Dictionary<string, MethodCall>
+        {
+            {"EndsWith", new MethodCall {Name = "endswith", Order = ParameterOrder.TargetFirst}},
+            {"StartsWith", new MethodCall {Name = "startswith", Order = ParameterOrder.TargetFirst}},
+            {"Contains", new MethodCall {Name = "substringof", Order = ParameterOrder.TargetLast}},
+            {"Substring", new MethodCall {Name = "substring", Order = ParameterOrder.TargetFirst}},
+            {"Length", new MethodCall {Name = "length", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(string)}}},
+            {"IndexOf", new MethodCall {Name = "indexof", Order = ParameterOrder.TargetFirst}},
+            {"Replace", new MethodCall {Name = "replace", Order = ParameterOrder.TargetFirst}},
+            {"ToLower", new MethodCall {Name = "tolower", Order = ParameterOrder.TargetFirst}},
+            {"ToUpper", new MethodCall {Name = "toupper", Order = ParameterOrder.TargetFirst}},
+            {"Trim", new MethodCall {Name = "trim", Order = ParameterOrder.TargetFirst}},
+            {"Concat", new MethodCall {Name = "concat", Order = ParameterOrder.TargetFirst}},
+            {"Day", new MethodCall {Name = "day", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}}},
+            {"Month", new MethodCall {Name = "month", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}}},
+            {"Year", new MethodCall {Name = "year", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}}},
+            {"Hour", new MethodCall {Name = "hour", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}}},
+            {"Minute", new MethodCall {Name = "minute", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}}},
+            {"Second", new MethodCall {Name = "second", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}}},
+            {"Millisecond", new MethodCall {Name = "fractionalseconds", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(DateTime),typeof(DateTime?),typeof(DateTimeOffset), typeof(DateTimeOffset?)}, RightOperandConverter = (s) => ConvertToFractionalSeconds(s)}},
+            {"Round", new MethodCall {Name = "round", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
+            {"Floor", new MethodCall {Name = "floor", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
+            {"Ceiling", new MethodCall {Name = "ceiling", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
+        };
+
     }
 }
