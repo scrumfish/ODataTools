@@ -61,44 +61,27 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
             }
-            var target = callExpression.Object.ParseMemberExpression();
+            var target = callExpression.Object?.ParseMemberExpression();
             var parameters = callExpression.Arguments.Select(a => a.ParseExpression()).ToList();
-            return BuildMethodCall(method.Name, method.Order, target, parameters);
-        }
-
-        private static string BuildMethodCall(string method, ParameterOrder order, string target, List<string> parameters)
-        {
+            if (!string.IsNullOrWhiteSpace(target))
+            {
+                if (method.Order == ParameterOrder.TargetFirst)
+                {
+                    parameters.Insert(0, target);
+                }
+                else
+                {
+                    parameters.Add(target);
+                }
+            }
             return new StringBuilder()
-                .Append(method)
+                .Append(method.Name)
                 .Append('(')
-                .AppendParameters(order, target, parameters)
+                .Append(string.Join(",", parameters))
                 .Append(')')
                 .ToString();
         }
-
-        private static StringBuilder AppendParameters(this StringBuilder result, ParameterOrder order, string target, List<string> parameters)
-        {
-            if (order == ParameterOrder.TargetFirst)
-            {
-                result.Append(target);
-                if (parameters.Any())
-                {
-                    result.Append(',')
-                        .Append(string.Join(",", parameters));
-                }
-            }
-            else
-            {
-                if (parameters.Any())
-                {
-                    result.Append(string.Join(",", parameters))
-                        .Append(',');
-                }
-                result.Append(target);
-            }
-            return result;
-        }
-
+        
         private static string ParseConstantExpression(this Expression expression)
         {
             var memberConstant = expression as ConstantExpression;
@@ -277,8 +260,10 @@ namespace Scrumfish.OData.Client.Common
             {typeof (short?), (o) => o.NumberOrNull<short?>()},
             {typeof (long?), (o) => o.NumberOrNull<long?>()},
             {typeof (string), (o) => o.StringOrNull()},
-            {typeof (char), (o) =>  o.StringOrNull() },
-            {typeof (char?), (o) =>  o.StringOrNull() }
+            {typeof (char), (o) => o.StringOrNull()},
+            {typeof (char?), (o) => o.StringOrNull()},
+            {typeof (decimal?), (o) => o.NumberOrNull<decimal?>()},
+            {typeof (decimal), (o) => o.NumberOrNull<decimal>()}
         };
 
         private static readonly Dictionary<string, MethodCall> Methods = new Dictionary<string, MethodCall>

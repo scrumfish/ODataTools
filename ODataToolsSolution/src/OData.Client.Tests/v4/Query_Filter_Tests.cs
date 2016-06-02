@@ -371,7 +371,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Filter_ReturnsRoundExpressionFromDateTimeOffset_Test()
         {
-            var expected = "?$filter=(round(SomeOffset) eq 42)";
+            var expected = "?$filter=(round(SomeDecimal) eq 42)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => decimal.Round(p.SomeDecimal) == 42)
                 .ToString();
@@ -381,7 +381,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Filter_ReturnsCeilingExpressionFromDateTimeOffset_Test()
         {
-            var expected = "?$filter=(ceiling(SomeOffset) eq 42)";
+            var expected = "?$filter=(ceiling(SomeDecimal) eq 42)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => decimal.Ceiling(p.SomeDecimal) == 42)
                 .ToString();
@@ -391,7 +391,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Filter_ReturnsFloorExpressionFromDateTimeOffset_Test()
         {
-            var expected = "?$filter=(floor(SomeOffset) eq 42)";
+            var expected = "?$filter=(floor(SomeDecimal) eq 42)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => decimal.Floor(p.SomeDecimal) == 42)
                 .ToString();
