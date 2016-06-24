@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -12,7 +13,7 @@ namespace Scrumfish.OData.Client.Common
         {
             return expression.Body.ParseExpression();
         }
-        
+
         private static string ParseExpression(this Expression expression)
         {
             Func<Expression, string> method;
@@ -81,7 +82,7 @@ namespace Scrumfish.OData.Client.Common
                 .Append(')')
                 .ToString();
         }
-        
+
         private static string ParseConstantExpression(this Expression expression)
         {
             var memberConstant = expression as ConstantExpression;
@@ -117,10 +118,12 @@ namespace Scrumfish.OData.Client.Common
             }
             MethodCall method;
             Methods.TryGetValue(memberExpression.Member.Name, out method);
+
             if (method?.SupportedTypes != null && method.SupportedTypes.Contains(memberExpression.Expression.Type))
             {
                 return memberExpression.ParseCallExpressionWithKnownProperty();
             }
+
             return memberExpression.Member.Name;
         }
 
@@ -206,6 +209,41 @@ namespace Scrumfish.OData.Client.Common
                 .ToString();
         }
 
+        private static string ParseTypeIsExpression(this Expression expression)
+        {
+            var typeExpression = expression as TypeBinaryExpression;
+            if (typeExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find type expression to parse.");
+            }
+            string typeValue = typeExpression.TypeOperand.Name;
+            string knownCast;
+            KnownCasts.TryGetValue(typeValue, out knownCast);
+            typeValue = knownCast ?? typeValue;
+            if (typeExpression.Expression.NodeType != ExpressionType.Parameter)
+            {
+                var parameter = typeExpression.Expression.ParseExpression();
+                typeValue = $"{parameter},{typeValue}";
+            }
+            return new StringBuilder("isof(", 128)
+                .Append(typeValue)
+                .Append(')')
+                .ToString();
+        }
+
+        private static string ParseTypeAsExpression(this Expression expression)
+        {
+            var typeExpression = expression as UnaryExpression;
+            if (typeExpression == null)
+            {
+                throw new InvalidExpressionException("Could not find type expression to parse.");
+            }
+            return new StringBuilder("cast(", 128)
+                .Append(typeExpression.Type.Name)
+                .Append(')')
+                .ToString();
+        }
+
         private static string ConvertToFractionalSeconds(string value)
         {
             int milliseconds;
@@ -229,7 +267,7 @@ namespace Scrumfish.OData.Client.Common
             public string Name { get; set; }
             public ParameterOrder Order { get; set; }
             public IList<Type> SupportedTypes { get; set; }
-            public Func<string,string> RightOperandConverter { get; set; } 
+            public Func<string, string> RightOperandConverter { get; set; }
         }
 
         private static readonly Dictionary<ExpressionType, Func<Expression, string>> ExpressionParsers = new Dictionary
@@ -248,6 +286,8 @@ namespace Scrumfish.OData.Client.Common
             {ExpressionType.Constant, ParseConstantExpression},
             {ExpressionType.Call, ParseCallExpression},
             {ExpressionType.Add, ParseAddExpression},
+            {ExpressionType.TypeIs, ParseTypeIsExpression },
+            {ExpressionType.TypeAs , ParseTypeAsExpression }
         };
 
         private static readonly Dictionary<Type, Func<object, string>> TypeConverter = new Dictionary
@@ -290,6 +330,26 @@ namespace Scrumfish.OData.Client.Common
             {"Floor", new MethodCall {Name = "floor", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
             {"Ceiling", new MethodCall {Name = "ceiling", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
         };
+
+        private static readonly Dictionary<string, string> KnownCasts = new Dictionary<string, string>
+        {
+            {"null", "null" },
+            {"Int16", "Edm.Int16"},
+            {"Int32", "Edm.Int32"},
+            {"Int64", "Edm.Int64"},
+            {"Boolean", "Edm.Boolean"},
+            {"Byte", "Edm.Byte"},
+            {"DateTime", "Edm.DateTime"},
+            {"Decimal", "Edm.Decimal"},
+            {"Double", "Edm.Double"},
+            {"Single", "Edm.Single"},
+            {"Guid", "Edm.Guid"},
+            {"SByte", "Edm.SByte"},
+            {"String", "Edm.String"},
+            {"TimeSpan", "Edm.Time"},
+            {"DateTimeOffset", "Edm.DateTimeOffset"},
+        };
+
 
     }
 }

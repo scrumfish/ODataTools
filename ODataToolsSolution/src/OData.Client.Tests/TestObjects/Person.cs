@@ -12,4 +12,10 @@ namespace Scrumfish.OData.Client.Tests.TestObjects
         public DateTimeOffset SomeOffset { get; set; }
         public decimal SomeDecimal { get; set; }
     }
+
+    internal class Employee : Person
+    {
+        public DateTime HireDate { get; set; }
+    }
+
 }

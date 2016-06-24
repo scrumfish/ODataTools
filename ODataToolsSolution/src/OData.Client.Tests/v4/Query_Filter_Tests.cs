@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
 using Scrumfish.OData.Client.v4;
@@ -35,7 +36,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.Age == 5)
                 .ToString();
-            Assert.AreEqual(expected,result);
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -105,7 +106,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.LastName.EndsWith("eece"))
                 .ToString();
-            Assert.AreEqual(expected,result);
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -165,7 +166,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.FirstName.IndexOf("St") == 0)
                 .ToString();
-            Assert.AreEqual(expected,result);
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -175,7 +176,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.LastName.Replace("ce", "th") == "Reeth")
                 .ToString();
-            Assert.AreEqual(expected,result);
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -394,6 +395,37 @@ namespace Scrumfish.OData.Client.Tests.v4
             var expected = "?$filter=(floor(SomeDecimal) eq 42)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => decimal.Floor(p.SomeDecimal) == 42)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsIsOfExpression_Test()
+        {
+            var expected = "?$filter=isof(Employee)";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p is Employee)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsIsOfExpressionFromProperty_Test()
+        {
+            var expected = "?$filter=isof(Age,Edm.Int32)";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.Age is int)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsCastExpression_Test()
+        {
+            var expected = "?$filter=(cast(Employee) eq test)";
+            Employee test = null;
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p as Employee == test)
                 .ToString();
             Assert.AreEqual(expected, result);
         }
