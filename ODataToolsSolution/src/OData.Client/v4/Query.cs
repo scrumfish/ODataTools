@@ -33,8 +33,6 @@ namespace Scrumfish.OData.Client.v4
                      .ParseExpression());
         }
 
-        private static string _desc = " desc";
-
         public static ODataQuery<T> OrderByDesc<T>(this ODataQuery<T> target, Expression<Func<T, object>> action) where T : class
         {
             return target.AppendOperation("$orderBy")
@@ -57,6 +55,8 @@ namespace Scrumfish.OData.Client.v4
                     .ParseExpression())
                     .AppendModifier(_desc);
         }
+
+        private static string _desc = " desc";
     }
 }
 
