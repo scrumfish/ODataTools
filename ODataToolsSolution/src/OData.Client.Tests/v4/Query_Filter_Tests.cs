@@ -429,5 +429,15 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .ToString();
             Assert.AreEqual(expected, result);
         }
+
+        [TestMethod]
+        public void Filter_ReturnsCastOfPropertyExpression_Test()
+        {
+            var expected = "?$filter=(cast(ThePerson,Employee) ne null)";
+            var result = "?".CreateODataQuery<PersonContainer>()
+                .Filter(p => p.ThePerson as Employee != null)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
     }
 }
