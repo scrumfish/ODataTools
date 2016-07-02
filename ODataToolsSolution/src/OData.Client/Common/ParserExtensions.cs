@@ -75,8 +75,7 @@ namespace Scrumfish.OData.Client.Common
                     parameters.Add(target);
                 }
             }
-            return new StringBuilder()
-                .Append(method.Name)
+            return NewStringBuilder(method.Name)
                 .Append('(')
                 .Append(string.Join(",", parameters))
                 .Append(')')
@@ -89,6 +88,10 @@ namespace Scrumfish.OData.Client.Common
             if (memberConstant == null)
             {
                 throw new InvalidExpressionException("Could not find a constant expression to parse.");
+            }
+            if (memberConstant.Value == null)
+            {
+                return "null";
             }
             Func<object, string> convertToString;
             TypeConverter.TryGetValue(memberConstant.Type, out convertToString);
@@ -136,8 +139,7 @@ namespace Scrumfish.OData.Client.Common
                 throw new InvalidExpressionException($"The method {expression.Member.Name} could not be mapped.");
             }
 
-            return new StringBuilder()
-                .Append(method.Name)
+            return NewStringBuilder(method.Name)
                 .Append('(')
                 .Append(expression.Expression.ParseExpression())
                 .Append(')')
@@ -154,7 +156,7 @@ namespace Scrumfish.OData.Client.Common
 
             var rightOverride = logicalExpression.Left.GetRightOperandOverride();
 
-            return new StringBuilder()
+            return NewStringBuilder()
                 .Append('(')
                 .Append(logicalExpression.Left.ParseExpression())
                 .Append(logicalExpression.NodeType.AsOperator())
@@ -199,8 +201,7 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidExpressionException($"The method {binaryExpression.Method.Name} could not be mapped.");
             }
-            return new StringBuilder()
-                .Append(method.Name)
+            return NewStringBuilder(method.Name)
                 .Append('(')
                 .Append(binaryExpression.Left.ParseExpression())
                 .Append(',')
@@ -225,7 +226,7 @@ namespace Scrumfish.OData.Client.Common
                 var parameter = typeExpression.Expression.ParseExpression();
                 typeValue = $"{parameter},{typeValue}";
             }
-            return new StringBuilder("isof(", 128)
+            return NewStringBuilder("isof(")
                 .Append(typeValue)
                 .Append(')')
                 .ToString();
@@ -238,10 +239,29 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidExpressionException("Could not find type expression to parse.");
             }
-            return new StringBuilder("cast(", 128)
+            if ((typeExpression.Operand as MemberExpression) != null)
+            {
+                return NewStringBuilder("cast(")
+                    .Append((typeExpression.Operand as MemberExpression).Member.Name)
+                    .Append(',')
+                    .Append(typeExpression.Type.Name)
+                    .Append(')')
+                    .ToString();
+            }
+            return NewStringBuilder("cast(")
                 .Append(typeExpression.Type.Name)
                 .Append(')')
                 .ToString();
+        }
+
+        private static StringBuilder NewStringBuilder()
+        {
+            return new StringBuilder(128);
+        }
+
+        private static StringBuilder NewStringBuilder(string input)
+        {
+            return new StringBuilder(input,128);
         }
 
         private static string ConvertToFractionalSeconds(string value)

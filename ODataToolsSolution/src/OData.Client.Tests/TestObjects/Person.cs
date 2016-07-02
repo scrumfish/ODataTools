@@ -18,4 +18,8 @@ namespace Scrumfish.OData.Client.Tests.TestObjects
         public DateTime HireDate { get; set; }
     }
 
+    internal class PersonContainer
+    {
+        public Person ThePerson { get; set; }
+    }
 }
