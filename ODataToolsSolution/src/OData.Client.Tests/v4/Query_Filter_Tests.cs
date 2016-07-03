@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Spatial;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
@@ -35,6 +35,17 @@ namespace Scrumfish.OData.Client.Tests.v4
             var expected = "?$filter=(Age eq 5)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.Age == 5)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsIntegerEqualityOperationFromVariable_Test()
+        {
+            var five = 5;
+            var expected = "?$filter=(Age eq 5)";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.Age == five)
                 .ToString();
             Assert.AreEqual(expected, result);
         }
@@ -422,7 +433,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Filter_ReturnsCastExpression_Test()
         {
-            var expected = "?$filter=(cast(Employee) eq test)";
+            var expected = "?$filter=(cast(Employee) eq null)";
             Employee test = null;
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p as Employee == test)
@@ -438,6 +449,17 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .Filter(p => p.ThePerson as Employee != null)
                 .ToString();
             Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Filter_ReturnsGeoDistanceExpression_Test()
+        {
+            GeographyPoint point = new TestGeographyPoint(36.056198, -112.125198);
+            var expected = "?$filter=(geo.distance(MyHomePosition,POINT(36.056198 -112.125198)) lt 42.2)";
+            var result = "?".CreateODataQuery<Person>()
+                .Filter(p => p.MyHomePosition.Distance(point) < 42.2)
+                .ToString();
+            Assert.AreEqual(expected,result);
         }
     }
 }
