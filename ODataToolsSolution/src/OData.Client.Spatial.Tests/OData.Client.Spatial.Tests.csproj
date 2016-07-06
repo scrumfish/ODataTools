@@ -3,11 +3,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{17FF9772-6946-4DB3-A6D9-AD6186C3D137}</ProjectGuid>
+    <ProjectGuid>{2091B740-82E8-41B7-8513-D9E6C9B8E1F8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Scrumfish.OData.Client.Tests</RootNamespace>
-    <AssemblyName>Scrumfish.OData.Client.Tests</AssemblyName>
+    <RootNamespace>OData.Client.Spatial.Tests</RootNamespace>
+    <AssemblyName>OData.Client.Spatial.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -49,26 +49,25 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
-          <Private>False</Private>
-        </Reference>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
       </ItemGroup>
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="ParserExtensions_Tests.cs" />
+    <Compile Include="GeometryPointStringifier_Tests.cs" />
     <Compile Include="TestObjects\TestGeographyPoint.cs" />
-    <Compile Include="v4\Query_OrderBy_Tests.cs" />
-    <Compile Include="TestObjects\Person.cs" />
-    <Compile Include="v4\Query_Filter_Tests.cs" />
+    <Compile Include="GeographyPointStringifier_Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="v4\Query_Skip_Tests.cs" />
-    <Compile Include="v4\Query_Top_Tests.cs" />
+    <Compile Include="TestObjects\TestGeometeryPoint.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OData.Client\OData.Client.csproj">
-      <Project>{4D5A8AC0-3454-4E4C-B0B1-B937AC980402}</Project>
-      <Name>OData.Client</Name>
+    <ProjectReference Include="..\OData.Client.Spatial\OData.Client.Spatial.csproj">
+      <Project>{AC9AAACF-501E-4081-AA96-BFCCB1B3E080}</Project>
+      <Name>OData.Client.Spatial</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OData.Objects\OData.Objects.csproj">
+      <Project>{71f63f5b-32aa-47e2-b6bc-ecae3e641895}</Project>
+      <Name>OData.Objects</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

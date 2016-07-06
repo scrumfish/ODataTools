@@ -4,7 +4,7 @@
     {
         protected object Item { get; set; }
 
-        Stringifier(object item)
+        protected Stringifier(object item)
         {
             Item = item;
         }
