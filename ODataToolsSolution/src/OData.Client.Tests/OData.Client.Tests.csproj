@@ -66,12 +66,17 @@
     <Compile Include="v4\Query_Top_Tests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\OData.Client.Spatial\OData.Client.Spatial.csproj">
+      <Project>{ac9aaacf-501e-4081-aa96-bfccb1b3e080}</Project>
+      <Name>OData.Client.Spatial</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OData.Client\OData.Client.csproj">
       <Project>{4D5A8AC0-3454-4E4C-B0B1-B937AC980402}</Project>
       <Name>OData.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>
