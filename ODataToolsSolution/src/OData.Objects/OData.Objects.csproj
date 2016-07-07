@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4D5A8AC0-3454-4E4C-B0B1-B937AC980402}</ProjectGuid>
+    <ProjectGuid>{71F63F5B-32AA-47E2-B6BC-ECAE3E641895}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Scrumfish.OData.Client</RootNamespace>
-    <AssemblyName>Scrumfish.OData.Client</AssemblyName>
+    <RootNamespace>Scrumfish.OData.Objects</RootNamespace>
+    <AssemblyName>Scrumfish.OData.Objects</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,7 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Accessibility" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -42,20 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\InvalidExpressionException.cs" />
-    <Compile Include="Common\InvalidExpressionOperatorException.cs" />
-    <Compile Include="Common\InvalidOperationException.cs" />
-    <Compile Include="Common\ODataQuery.cs" />
-    <Compile Include="Common\ParserExtensions.cs" />
-    <Compile Include="Factories\StringifierFactory.cs" />
-    <Compile Include="v4\Query.cs" />
+    <Compile Include="Stringifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OData.Objects\OData.Objects.csproj">
-      <Project>{71f63f5b-32aa-47e2-b6bc-ecae3e641895}</Project>
-      <Name>OData.Objects</Name>
-    </ProjectReference>
+    <Compile Include="TypeFactoryConfiguration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

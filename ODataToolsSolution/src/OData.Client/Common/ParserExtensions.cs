@@ -127,9 +127,54 @@ namespace Scrumfish.OData.Client.Common
                 return memberExpression.ParseCallExpressionWithKnownProperty();
             }
 
-            return memberExpression.Member.Name;
-        }
+            if (memberExpression.Expression.NodeType == ExpressionType.Parameter)
+            {
+                return memberExpression.Member.Name;
+            }
 
+            var constantExpression = memberExpression.Expression as ConstantExpression;
+            if (constantExpression == null)
+            {
+                throw new InvalidExpressionException("Unknown data type for member constant expression.");
+            }
+
+            if (constantExpression.Value == null)
+            {
+                return "null";
+            }
+
+            object result;
+            if (memberExpression.Member is FieldInfo)
+            {
+                result = ((FieldInfo) memberExpression.Member).GetValue(constantExpression.Value);
+            }
+            else if (memberExpression.Member is PropertyInfo)
+            {
+                result = ((PropertyInfo) memberExpression.Member).GetValue(constantExpression.Value);
+            }
+            else
+            {
+                throw new InvalidExpressionException("Unknown data type for member constant expression.");
+            }
+            if (result == null)
+            {
+                return "null";
+            }
+
+            Func<object, string> convertToString;
+            TypeConverter.TryGetValue(result.GetType(), out convertToString);
+            if (convertToString != null)
+            {
+                return convertToString(result);
+            }
+            var stringifier = Factories.StringifierFactory.GetStringifier(result);
+            if (stringifier != null)
+            {
+                return stringifier.Stringify();
+            }
+            throw new InvalidExpressionException("Unknown data type for member constant expression.");
+        }
+        
         private static string ParseCallExpressionWithKnownProperty(this MemberExpression expression)
         {
             MethodCall method;
@@ -261,7 +306,7 @@ namespace Scrumfish.OData.Client.Common
 
         private static StringBuilder NewStringBuilder(string input)
         {
-            return new StringBuilder(input,128);
+            return new StringBuilder(input, 128);
         }
 
         private static string ConvertToFractionalSeconds(string value)
@@ -323,7 +368,9 @@ namespace Scrumfish.OData.Client.Common
             {typeof (char), (o) => o.StringOrNull()},
             {typeof (char?), (o) => o.StringOrNull()},
             {typeof (decimal?), (o) => o.NumberOrNull<decimal?>()},
-            {typeof (decimal), (o) => o.NumberOrNull<decimal>()}
+            {typeof (decimal), (o) => o.NumberOrNull<decimal>()},
+            {typeof (double), (o) => o.NumberOrNull<double>()},
+            {typeof (double?), (o) => o.NumberOrNull<double?>()}
         };
 
         private static readonly Dictionary<string, MethodCall> Methods = new Dictionary<string, MethodCall>
@@ -349,6 +396,7 @@ namespace Scrumfish.OData.Client.Common
             {"Round", new MethodCall {Name = "round", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
             {"Floor", new MethodCall {Name = "floor", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
             {"Ceiling", new MethodCall {Name = "ceiling", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(decimal),typeof(decimal?)}}},
+            {"Distance", new MethodCall {Name = "geo.distance", Order = ParameterOrder.TargetFirst} }
         };
 
         private static readonly Dictionary<string, string> KnownCasts = new Dictionary<string, string>
