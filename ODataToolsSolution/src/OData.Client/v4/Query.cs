@@ -56,6 +56,12 @@ namespace Scrumfish.OData.Client.v4
                     .AppendModifier(_desc);
         }
 
+        public static ODataQuery<T> Count<T>(this ODataQuery<T> target)
+        {
+            return target.AssertNotInQuery()
+                .AppendUriElement("$count");
+        }
+
         private static string _desc = " desc";
     }
 }
