@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Spatial;
 
 namespace Scrumfish.OData.Client.Tests.TestObjects
 {
@@ -11,6 +12,7 @@ namespace Scrumfish.OData.Client.Tests.TestObjects
         public long? SomeBigNumber { get; set; }
         public DateTimeOffset SomeOffset { get; set; }
         public decimal SomeDecimal { get; set; }
+        public GeographyPoint MyHomePosition => new TestGeographyPoint(33.812511, -117.918976);
     }
 
     internal class Employee : Person

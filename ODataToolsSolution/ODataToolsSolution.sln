@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OData.Client", "src\OData.Client\OData.Client.csproj", "{4D5A8AC0-3454-4E4C-B0B1-B937AC980402}"
 EndProject
@@ -10,6 +10,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{E4DD9CD9-8F5D-4060-B7E7-64EE61263F75}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OData.Client.Tests", "src\OData.Client.Tests\OData.Client.Tests.csproj", "{17FF9772-6946-4DB3-A6D9-AD6186C3D137}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Objects", "Objects", "{F1D7A3FF-8218-49C9-BCE9-0EE6DCA3394A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OData.Objects", "src\OData.Objects\OData.Objects.csproj", "{71F63F5B-32AA-47E2-B6BC-ECAE3E641895}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OData.Objects.Tests", "src\OData.Objects.Tests\OData.Objects.Tests.csproj", "{28E94531-D2AA-435B-86B7-7083AEE680DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OData.Client.Spatial", "src\OData.Client.Spatial\OData.Client.Spatial.csproj", "{AC9AAACF-501E-4081-AA96-BFCCB1B3E080}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OData.Client.Spatial.Tests", "src\OData.Client.Spatial.Tests\OData.Client.Spatial.Tests.csproj", "{2091B740-82E8-41B7-8513-D9E6C9B8E1F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +35,22 @@ Global
 		{17FF9772-6946-4DB3-A6D9-AD6186C3D137}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17FF9772-6946-4DB3-A6D9-AD6186C3D137}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17FF9772-6946-4DB3-A6D9-AD6186C3D137}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71F63F5B-32AA-47E2-B6BC-ECAE3E641895}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71F63F5B-32AA-47E2-B6BC-ECAE3E641895}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71F63F5B-32AA-47E2-B6BC-ECAE3E641895}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71F63F5B-32AA-47E2-B6BC-ECAE3E641895}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28E94531-D2AA-435B-86B7-7083AEE680DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28E94531-D2AA-435B-86B7-7083AEE680DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28E94531-D2AA-435B-86B7-7083AEE680DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28E94531-D2AA-435B-86B7-7083AEE680DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC9AAACF-501E-4081-AA96-BFCCB1B3E080}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC9AAACF-501E-4081-AA96-BFCCB1B3E080}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC9AAACF-501E-4081-AA96-BFCCB1B3E080}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC9AAACF-501E-4081-AA96-BFCCB1B3E080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2091B740-82E8-41B7-8513-D9E6C9B8E1F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2091B740-82E8-41B7-8513-D9E6C9B8E1F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2091B740-82E8-41B7-8513-D9E6C9B8E1F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2091B740-82E8-41B7-8513-D9E6C9B8E1F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,5 +58,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{4D5A8AC0-3454-4E4C-B0B1-B937AC980402} = {5E2EC99D-D9A0-4B2E-B6A8-4E6571B39E40}
 		{17FF9772-6946-4DB3-A6D9-AD6186C3D137} = {5E2EC99D-D9A0-4B2E-B6A8-4E6571B39E40}
+		{71F63F5B-32AA-47E2-B6BC-ECAE3E641895} = {F1D7A3FF-8218-49C9-BCE9-0EE6DCA3394A}
+		{28E94531-D2AA-435B-86B7-7083AEE680DD} = {F1D7A3FF-8218-49C9-BCE9-0EE6DCA3394A}
+		{AC9AAACF-501E-4081-AA96-BFCCB1B3E080} = {5E2EC99D-D9A0-4B2E-B6A8-4E6571B39E40}
+		{2091B740-82E8-41B7-8513-D9E6C9B8E1F8} = {5E2EC99D-D9A0-4B2E-B6A8-4E6571B39E40}
 	EndGlobalSection
 EndGlobal
