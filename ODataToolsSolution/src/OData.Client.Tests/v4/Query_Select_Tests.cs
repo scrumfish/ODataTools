@@ -4,6 +4,7 @@ using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
 using Scrumfish.OData.Client.v4;
 
+
 namespace Scrumfish.OData.Client.Tests.v4
 {
     [TestClass]
@@ -22,20 +23,32 @@ namespace Scrumfish.OData.Client.Tests.v4
         [TestMethod]
         public void Select_All_Test()
         {
-            //var expected = "?$select=*";
-            //var result = "?".CreateODataQuery<Person>()
-            //    .Select(p => p);
-            //    .ToString();
-            //Assert.AreEqual(expected, result);
+            var expected = "?$select=*";
+            var result = "?".CreateODataQuery<Person>()
+                .SelectAll(p => p)
+                .ToString();
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
-        public void Select_AppendsToQuery_Test()
+        public void Select_AppendPropertyToQuery_Test()
         {
             var expected = "?$select=LastName,FirstName";
             var result = "?".CreateODataQuery<Person>()
                 .Select(p => p.LastName)
                 .ThenSelect(p => p.FirstName)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Select_AppendOrderByToQuery_Test()
+        {
+            var expected = "?$select=LastName,FirstName&$orderBy=FirstName";
+            var result = "?".CreateODataQuery<Person>()
+                .Select(p => p.LastName)
+                .ThenSelect(p => p.FirstName)
+                .OrderBy(p => p.FirstName)
                 .ToString();
             Assert.AreEqual(expected, result);
         }
