@@ -129,6 +129,7 @@ namespace Scrumfish.OData.Client.Common
                 throw new InvalidExpressionException("Sub-query start and end mismatch.");
             }
             _currentState.InSubQuery = _state.Any();
+            _uri.Append(')');
             return this;
         }
 
@@ -140,6 +141,13 @@ namespace Scrumfish.OData.Client.Common
         public ODataQuery<T> AppendUriElement(string operation)
         {
             throw new NotImplementedException();
+        }
+
+        internal ODataQuery<T> AppendQuery<TY>(ODataQuery<TY> subquery)
+        {
+            AssertCurrentOperation("expand");
+            _uri.Append(subquery);
+            return this;
         }
     }
 

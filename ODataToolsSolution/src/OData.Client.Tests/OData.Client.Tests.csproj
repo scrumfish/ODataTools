@@ -36,6 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Spatial, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Spatial.5.7.0\lib\net40\System.Spatial.dll</HintPath>
       <Private>True</Private>
@@ -57,6 +58,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ParserExtensions_Tests.cs" />
+    <Compile Include="TestObjects\Car.cs" />
     <Compile Include="TestObjects\TestGeographyPoint.cs" />
     <Compile Include="v4\Query_OrderBy_Tests.cs" />
     <Compile Include="TestObjects\Person.cs" />

@@ -57,15 +57,12 @@ namespace Scrumfish.OData.Client.v4
                     .AppendModifier(_desc);
         }
 
-<<<<<<< HEAD
         public static ODataQuery<T> Count<T>(this ODataQuery<T> target)
         {
             return target.AssertNotInQuery()
                 .AppendUriElement("$count");
         }
 
-        private static string _desc = " desc";
-=======
         public static ODataQuery<T> Select<T>(this ODataQuery<T> target, Expression<Func<T, object>> action) where T : class
         {
             return target.AppendOperation("$select")
@@ -92,7 +89,18 @@ namespace Scrumfish.OData.Client.v4
                  .AppendExpression(action
                      .ParseExpression());
         }
->>>>>>> 541b320dad46281c17b80d9e2027e6952439e88e
+
+        public static ODataQuery<T> Expand<T,Y>(this ODataQuery<T> target, Expression<Func<T, object>> action, ODataQuery<Y> subquery)
+            where T : class
+        {
+            return target.AppendOperation("$expand")
+                .AppendExpression(action
+                    .ParseExpression())
+                .StartSubQuery()
+                .AppendQuery(subquery)
+                .EndSubQuery();
+        }
+        
     }
 }
 
