@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
 using Scrumfish.OData.Client.v4;
@@ -15,7 +16,41 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .Expand(p => p.Cars)
                 .ToString();
-            Assert.IsTrue(result.StartsWith(expected));
+            Assert.AreEqual(result,expected);
         }
+
+        [TestMethod]
+        public void Expand_ExpandsComplexObject_Test()
+        {
+            var expected = "?$expand=Address/City";
+            var result = "?".CreateODataQuery<Person>()
+                .Expand(p => p.Address.City)
+                .ToString();
+            Assert.AreEqual(expected, result);
+
+        }
+
+        [TestMethod]
+        public void Expand_ExpandsDeepComplexObject_Test()
+        {
+            var expected = "?$expand=Address/City/Population";
+            var result = "?".CreateODataQuery<Person>()
+                .Expand(p => p.Address.City.Population)
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Expand_ExpandsSubQuery_Test()
+        {
+            var expected = "?$expand=Cars($filter=(Make eq 'Ford');$select=Make,Model)";
+            var result = "?".CreateODataQuery<Person>()
+                .Expand(p => p.Cars, ODataQueryBuilder.CreateODataQuery<Car>()
+                    .Filter(c => c.Make == "Ford")
+                    .Select(c => c.Make, c => c.Model))
+                .ToString();
+            Assert.AreEqual(expected,result);
+        }
+
     }
 }

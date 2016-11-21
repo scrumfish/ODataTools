@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -14,7 +16,7 @@ namespace Scrumfish.OData.Client.Common
             return expression.Body.ParseExpression();
         }
 
-        private static string ParseExpression(this Expression expression)
+        public static string ParseExpression(this Expression expression)
         {
             Func<Expression, string> method;
             ExpressionParsers.TryGetValue(expression.NodeType, out method);
@@ -58,10 +60,16 @@ namespace Scrumfish.OData.Client.Common
             }
             MethodCall method;
             Methods.TryGetValue(callExpression.Method.Name, out method);
-            if (method == null)
+            if (method != null)
             {
-                throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
+                return ParseKnownMethod(callExpression, method);
             }
+            throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
+            
+        }
+
+        private static string ParseKnownMethod(MethodCallExpression callExpression, MethodCall method)
+        {
             var target = callExpression.Object?.ParseMemberExpression();
             var parameters = callExpression.Arguments.Select(a => a.ParseExpression()).ToList();
             if (!string.IsNullOrWhiteSpace(target))
@@ -132,6 +140,11 @@ namespace Scrumfish.OData.Client.Common
                 return memberExpression.Member.Name;
             }
 
+            if (memberExpression.Expression.NodeType == ExpressionType.MemberAccess)
+            {
+                return $"{memberExpression.Expression.ParseExpression()}/{memberExpression.Member.Name}";
+            }
+
             var constantExpression = memberExpression.Expression as ConstantExpression;
             if (constantExpression == null)
             {
@@ -146,11 +159,11 @@ namespace Scrumfish.OData.Client.Common
             object result;
             if (memberExpression.Member is FieldInfo)
             {
-                result = ((FieldInfo) memberExpression.Member).GetValue(constantExpression.Value);
+                result = ((FieldInfo)memberExpression.Member).GetValue(constantExpression.Value);
             }
             else if (memberExpression.Member is PropertyInfo)
             {
-                result = ((PropertyInfo) memberExpression.Member).GetValue(constantExpression.Value);
+                result = ((PropertyInfo)memberExpression.Member).GetValue(constantExpression.Value);
             }
             else
             {
@@ -174,7 +187,7 @@ namespace Scrumfish.OData.Client.Common
             }
             throw new InvalidExpressionException("Unknown data type for member constant expression.");
         }
-        
+
         private static string ParseCallExpressionWithKnownProperty(this MemberExpression expression)
         {
             MethodCall method;
@@ -417,7 +430,7 @@ namespace Scrumfish.OData.Client.Common
             {"TimeSpan", "Edm.Time"},
             {"DateTimeOffset", "Edm.DateTimeOffset"},
         };
-
+        
 
     }
 }

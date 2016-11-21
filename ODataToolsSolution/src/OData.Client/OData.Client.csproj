@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ArgumentCountException.cs" />
     <Compile Include="Common\InvalidExpressionException.cs" />
     <Compile Include="Common\InvalidExpressionOperatorException.cs" />
     <Compile Include="Common\InvalidOperationException.cs" />
