@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
 using Scrumfish.OData.Client.v4;
@@ -25,7 +24,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         {
             var expected = "?$select=*";
             var result = "?".CreateODataQuery<Person>()
-                .SelectAll(p => p)
+                .SelectAll()
                 .ToString();
             Assert.AreEqual(expected, result);
         }
@@ -35,8 +34,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         {
             var expected = "?$select=LastName,FirstName";
             var result = "?".CreateODataQuery<Person>()
-                .Select(p => p.LastName)
-                .ThenSelect(p => p.FirstName)
+                .Select(p => p.LastName, p => p.FirstName)
                 .ToString();
             Assert.AreEqual(expected, result);
         }
@@ -46,8 +44,7 @@ namespace Scrumfish.OData.Client.Tests.v4
         {
             var expected = "?$select=LastName,FirstName&$orderBy=FirstName";
             var result = "?".CreateODataQuery<Person>()
-                .Select(p => p.LastName)
-                .ThenSelect(p => p.FirstName)
+                .Select(p => p.LastName, p => p.FirstName)
                 .OrderBy(p => p.FirstName)
                 .ToString();
             Assert.AreEqual(expected, result);

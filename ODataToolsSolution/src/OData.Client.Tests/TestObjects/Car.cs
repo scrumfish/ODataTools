@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Scrumfish.OData.Client.Tests.TestObjects
 {
     internal class Car
     {
-        public int carId { get; set; }
+        public int CarId { get; set; }
         public string Make { get; set; }
         public string Model { get; set; }
         public int Year { get; set; }
@@ -12,5 +13,8 @@ namespace Scrumfish.OData.Client.Tests.TestObjects
         [ForeignKey("Person")]
         public int? personId { get; set; }
         public virtual Person Person { get; set; }
+
+        public IEnumerable<Driver> AuthorizedDrivers { get; set; } 
+        
     }
 }

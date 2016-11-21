@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Scrumfish.OData.Client.Common;
 
@@ -63,21 +65,14 @@ namespace Scrumfish.OData.Client.v4
                 .AppendUriElement("$count");
         }
 
-        public static ODataQuery<T> Select<T>(this ODataQuery<T> target, Expression<Func<T, object>> action) where T : class
+        public static ODataQuery<T> Select<T>(this ODataQuery<T> target, params Expression<Func<T, object>>[] actions) where T : class
         {
+            var expressions = actions.Select(a => a.ParseExpression());
             return target.AppendOperation("$select")
-                .AppendExpression(action
-                     .ParseExpression());
+                .AppendExpression(string.Join(",", expressions));
         }
 
-        public static ODataQuery<T> ThenSelect<T>(this ODataQuery<T> target, Expression<Func<T, object>> action) where T : class
-        {
-            return target.AssertCurrentOperation("$select")
-                .AppendChainingExpression(action
-                    .ParseExpression());
-        }
-
-        public static ODataQuery<T> SelectAll<T>(this ODataQuery<T> target, Expression<Func<T, object>> action) where T : class
+        public static ODataQuery<T> SelectAll<T>(this ODataQuery<T> target) where T : class
         {
             return target.AppendOperation("$select")
                  .AppendExpression("*");
@@ -86,12 +81,12 @@ namespace Scrumfish.OData.Client.v4
         public static ODataQuery<T> Expand<T>(this ODataQuery<T> target, Expression<Func<T, object>> action) where T : class
         {
             return target.AppendOperation("$expand")
-                 .AppendExpression(action
-                     .ParseExpression());
+                 .AppendExpression(action.ParseExpression());
         }
 
-        public static ODataQuery<T> Expand<T,Y>(this ODataQuery<T> target, Expression<Func<T, object>> action, ODataQuery<Y> subquery)
+        public static ODataQuery<T> Expand<T,TY>(this ODataQuery<T> target, Expression<Func<T, object>> action, ODataQuery<TY> subquery)
             where T : class
+            where TY : class 
         {
             return target.AppendOperation("$expand")
                 .AppendExpression(action
@@ -100,7 +95,13 @@ namespace Scrumfish.OData.Client.v4
                 .AppendQuery(subquery)
                 .EndSubQuery();
         }
-        
+
+        public static object WithDependency<T>(this object target, Expression<Func<T, object>> dependency) 
+            where T : class
+        {
+            return target;
+        }
+
     }
 }
 
