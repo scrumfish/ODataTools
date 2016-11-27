@@ -64,8 +64,20 @@ namespace Scrumfish.OData.Client.Common
             {
                 return ParseKnownMethod(callExpression, method);
             }
+            Func<MethodCallExpression, string> helper;
+            HelperMethods.TryGetValue(callExpression.Method.Name, out helper);
+            if (helper != null)
+            {
+                return helper(callExpression);
+            }
             throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
             
+        }
+
+        private static string ParseHelperMethod(this MethodCallExpression expression)
+        {
+            var expressions = expression.Arguments.Select(a => a.ParseExpression());
+            return string.Join("/", expressions);
         }
 
         private static string ParseKnownMethod(MethodCallExpression callExpression, MethodCall method)
@@ -365,8 +377,20 @@ namespace Scrumfish.OData.Client.Common
             {ExpressionType.Call, ParseCallExpression},
             {ExpressionType.Add, ParseAddExpression},
             {ExpressionType.TypeIs, ParseTypeIsExpression },
-            {ExpressionType.TypeAs , ParseTypeAsExpression }
+            {ExpressionType.TypeAs , ParseTypeAsExpression },
+            {ExpressionType.Quote, ParseQuoteExpression },
+            {ExpressionType.Lambda, (expression) => ((LambdaExpression)expression).Body.ParseExpression() }
         };
+
+        private static string ParseQuoteExpression(Expression arg)
+        {
+            var expression = arg as UnaryExpression;
+            if (expression == null)
+            {
+                throw new InvalidExpressionException("Cannot parse quote expression.");
+            }
+            return expression.Operand.ParseExpression();
+        }
 
         private static readonly Dictionary<Type, Func<object, string>> TypeConverter = new Dictionary
             <Type, Func<object, string>>
@@ -430,7 +454,11 @@ namespace Scrumfish.OData.Client.Common
             {"TimeSpan", "Edm.Time"},
             {"DateTimeOffset", "Edm.DateTimeOffset"},
         };
-        
 
+        private static readonly Dictionary<string, Func<MethodCallExpression, string>> HelperMethods = new Dictionary
+            <string, Func<MethodCallExpression, string>>
+        {
+            {"WithDependency", ParseHelperMethod}
+        };
     }
 }

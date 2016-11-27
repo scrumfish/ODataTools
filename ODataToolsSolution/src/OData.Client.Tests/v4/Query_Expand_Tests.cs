@@ -16,7 +16,7 @@ namespace Scrumfish.OData.Client.Tests.v4
             var result = "?".CreateODataQuery<Person>()
                 .Expand(p => p.Cars)
                 .ToString();
-            Assert.AreEqual(result,expected);
+            Assert.AreEqual(result, expected);
         }
 
         [TestMethod]
@@ -49,8 +49,19 @@ namespace Scrumfish.OData.Client.Tests.v4
                     .Filter(c => c.Make == "Ford")
                     .Select(c => c.Make, c => c.Model))
                 .ToString();
-            Assert.AreEqual(expected,result);
+            Assert.AreEqual(expected, result);
         }
 
+        [TestMethod]
+        public void Expand_ExpandsDeepSubQuery_Test()
+        {
+            var expected = "?$expand=Cars/AuthorizedDrivers($filter=(Age gt 21);$select=LastName,LicenseNumber)";
+            var result = "?".CreateODataQuery<Person>()
+                .Expand(p => p.Cars.WithDependency<Car>(c => c.AuthorizedDrivers), ODataQueryBuilder.CreateODataQuery<Driver>()
+                    .Filter(a => a.Age > 21)
+                    .Select(a => a.LastName, a => a.LicenseNumber))
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
     }
 }
