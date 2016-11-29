@@ -59,10 +59,10 @@ namespace Scrumfish.OData.Client.v4
                     .AppendModifier(_desc);
         }
 
-        public static ODataQuery<T> Count<T>(this ODataQuery<T> target)
+        public static ODataQuery<T> Count<T>(this ODataQuery<T> target, bool returnCount)
         {
-            return target.AssertNotInQuery()
-                .AppendUriElement("$count");
+            return target.AppendOperation("$count")
+                .AppendExpression(returnCount ? "true" : "false");
         }
 
         public static ODataQuery<T> Select<T>(this ODataQuery<T> target, params Expression<Func<T, object>>[] actions) where T : class
