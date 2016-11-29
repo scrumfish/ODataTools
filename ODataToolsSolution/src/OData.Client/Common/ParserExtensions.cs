@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -14,7 +16,7 @@ namespace Scrumfish.OData.Client.Common
             return expression.Body.ParseExpression();
         }
 
-        private static string ParseExpression(this Expression expression)
+        public static string ParseExpression(this Expression expression)
         {
             Func<Expression, string> method;
             ExpressionParsers.TryGetValue(expression.NodeType, out method);
@@ -58,10 +60,28 @@ namespace Scrumfish.OData.Client.Common
             }
             MethodCall method;
             Methods.TryGetValue(callExpression.Method.Name, out method);
-            if (method == null)
+            if (method != null)
             {
-                throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
+                return ParseKnownMethod(callExpression, method);
             }
+            Func<MethodCallExpression, string> helper;
+            HelperMethods.TryGetValue(callExpression.Method.Name, out helper);
+            if (helper != null)
+            {
+                return helper(callExpression);
+            }
+            throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
+            
+        }
+
+        private static string ParseHelperMethod(this MethodCallExpression expression)
+        {
+            var expressions = expression.Arguments.Select(a => a.ParseExpression());
+            return string.Join("/", expressions);
+        }
+
+        private static string ParseKnownMethod(MethodCallExpression callExpression, MethodCall method)
+        {
             var target = callExpression.Object?.ParseMemberExpression();
             var parameters = callExpression.Arguments.Select(a => a.ParseExpression()).ToList();
             if (!string.IsNullOrWhiteSpace(target))
@@ -132,6 +152,11 @@ namespace Scrumfish.OData.Client.Common
                 return memberExpression.Member.Name;
             }
 
+            if (memberExpression.Expression.NodeType == ExpressionType.MemberAccess)
+            {
+                return $"{memberExpression.Expression.ParseExpression()}/{memberExpression.Member.Name}";
+            }
+
             var constantExpression = memberExpression.Expression as ConstantExpression;
             if (constantExpression == null)
             {
@@ -146,11 +171,11 @@ namespace Scrumfish.OData.Client.Common
             object result;
             if (memberExpression.Member is FieldInfo)
             {
-                result = ((FieldInfo) memberExpression.Member).GetValue(constantExpression.Value);
+                result = ((FieldInfo)memberExpression.Member).GetValue(constantExpression.Value);
             }
             else if (memberExpression.Member is PropertyInfo)
             {
-                result = ((PropertyInfo) memberExpression.Member).GetValue(constantExpression.Value);
+                result = ((PropertyInfo)memberExpression.Member).GetValue(constantExpression.Value);
             }
             else
             {
@@ -174,7 +199,7 @@ namespace Scrumfish.OData.Client.Common
             }
             throw new InvalidExpressionException("Unknown data type for member constant expression.");
         }
-        
+
         private static string ParseCallExpressionWithKnownProperty(this MemberExpression expression)
         {
             MethodCall method;
@@ -352,8 +377,20 @@ namespace Scrumfish.OData.Client.Common
             {ExpressionType.Call, ParseCallExpression},
             {ExpressionType.Add, ParseAddExpression},
             {ExpressionType.TypeIs, ParseTypeIsExpression },
-            {ExpressionType.TypeAs , ParseTypeAsExpression }
+            {ExpressionType.TypeAs , ParseTypeAsExpression },
+            {ExpressionType.Quote, ParseQuoteExpression },
+            {ExpressionType.Lambda, (expression) => ((LambdaExpression)expression).Body.ParseExpression() }
         };
+
+        private static string ParseQuoteExpression(Expression arg)
+        {
+            var expression = arg as UnaryExpression;
+            if (expression == null)
+            {
+                throw new InvalidExpressionException("Cannot parse quote expression.");
+            }
+            return expression.Operand.ParseExpression();
+        }
 
         private static readonly Dictionary<Type, Func<object, string>> TypeConverter = new Dictionary
             <Type, Func<object, string>>
@@ -418,6 +455,10 @@ namespace Scrumfish.OData.Client.Common
             {"DateTimeOffset", "Edm.DateTimeOffset"},
         };
 
-
+        private static readonly Dictionary<string, Func<MethodCallExpression, string>> HelperMethods = new Dictionary
+            <string, Func<MethodCallExpression, string>>
+        {
+            {"WithDependency", ParseHelperMethod}
+        };
     }
 }
