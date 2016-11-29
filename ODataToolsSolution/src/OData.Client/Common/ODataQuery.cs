@@ -131,16 +131,6 @@ namespace Scrumfish.OData.Client.Common
             return this;
         }
 
-        public ODataQuery<T> AssertNotInQuery()
-        {
-            throw new NotImplementedException();
-        }
-
-        public ODataQuery<T> AppendUriElement(string operation)
-        {
-            throw new NotImplementedException();
-        }
-
         internal ODataQuery<T> AppendQuery<TY>(ODataQuery<TY> subquery)
         {
             AssertCurrentOperation("$expand");

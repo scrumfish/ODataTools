@@ -62,6 +62,7 @@
     <Compile Include="TestObjects\Car.cs" />
     <Compile Include="TestObjects\Driver.cs" />
     <Compile Include="TestObjects\TestGeographyPoint.cs" />
+    <Compile Include="v4\Query_Count_Tests.cs" />
     <Compile Include="v4\Query_Expand_Tests.cs" />
     <Compile Include="v4\Query_OrderBy_Tests.cs" />
     <Compile Include="TestObjects\Person.cs" />
