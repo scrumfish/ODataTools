@@ -234,3 +234,6 @@ _Pvt_Extensions
 
 # FAKE - F# Make
 .fake/
+/ODataToolsSolution/ForODataTesting/Properties/AssemblyInfo.cs
+/ODataToolsSolution/ForODataTesting/App.config
+/ODataToolsSolution/ForODataTesting/ForODataTesting.csproj
