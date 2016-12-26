@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scrumfish.OData.Client.Common;
 using Scrumfish.OData.Client.Tests.TestObjects;
@@ -60,6 +61,30 @@ namespace Scrumfish.OData.Client.Tests.v4
                 .Expand(p => p.Cars.WithDependency<Car>(c => c.AuthorizedDrivers), ODataQueryBuilder.CreateODataQuery<Driver>()
                     .Filter(a => a.Age > 21)
                     .Select(a => a.LastName, a => a.LicenseNumber))
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Expand_ExpandLevels_Test()
+        {
+            var expected = "?$expand=Cars($levels=3)";
+            var result = "?".CreateODataQuery<Person>()
+                .Expand(p => p.Cars, ODataQueryBuilder.CreateODataQuery<Car>()
+                    .ExpandLevels(3))
+                .ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void Expand_ExpandsSubQueryWithLevels_Test()
+        {
+            var expected = "?$expand=Cars($filter=(Make eq 'Ford');$select=Make,Model;$levels=2)";
+            var result = "?".CreateODataQuery<Person>()
+                .Expand(p => p.Cars, ODataQueryBuilder.CreateODataQuery<Car>()
+                    .Filter(c => c.Make == "Ford")
+                    .Select(c => c.Make, c => c.Model)
+                    .ExpandLevels(2))
                 .ToString();
             Assert.AreEqual(expected, result);
         }

@@ -96,6 +96,12 @@ namespace Scrumfish.OData.Client.v4
                 .EndSubQuery();
         }
 
+        public static ODataQuery<T> ExpandLevels<T>(this ODataQuery<T> target, int levels)
+        {
+            return target.AppendOperation("$levels")
+                .AppendExpression(levels);
+        }
+
         public static object WithDependency<T>(this object target, Expression<Func<T, object>> dependency) 
             where T : class
         {
