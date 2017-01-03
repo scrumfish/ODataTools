@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Scrumfish.OData.Client.Common;
@@ -85,8 +84,6 @@ namespace Scrumfish.OData.Client.v4
         }
 
         public static ODataQuery<T> Expand<T,TY>(this ODataQuery<T> target, Expression<Func<T, object>> action, ODataQuery<TY> subquery)
-            where T : class
-            where TY : class 
         {
             return target.AppendOperation("$expand")
                 .AppendExpression(action
@@ -94,6 +91,12 @@ namespace Scrumfish.OData.Client.v4
                 .StartSubQuery()
                 .AppendQuery(subquery)
                 .EndSubQuery();
+        }
+
+        public static ODataQuery<T> Search<T>(this ODataQuery<T> target, Expression<Func<string, string>> searchTerm)
+        {
+            return target.AppendOperation("$search")
+                .AppendExpression(searchTerm.ParseExpression());
         }
 
         public static ODataQuery<T> ExpandLevels<T>(this ODataQuery<T> target, int levels)
@@ -108,6 +111,34 @@ namespace Scrumfish.OData.Client.v4
             return target;
         }
 
+        public static string Not(this string target, string searchTerm)
+        {
+            return target;
+        }
+        public static string Match(this string target, string searchTerm)
+        {
+            return target;
+        }
+        public static string And(this string target, string searchTerm)
+        {
+            return target;
+        }
+        public static string And(this string target)
+        {
+            return target;
+        }
+        public static string Or(this string target, string searchTerm)
+        {
+            return target;
+        }
+        public static string Or(this string target)
+        {
+            return target;
+        }
+        public static string Group(this string target, Expression<Func<string, string>> searchTerm)
+        {
+            return target;
+        }
     }
 }
 

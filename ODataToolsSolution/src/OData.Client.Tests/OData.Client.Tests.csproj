@@ -68,6 +68,7 @@
     <Compile Include="TestObjects\Person.cs" />
     <Compile Include="v4\Query_Filter_Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="v4\Query_Search_Tests.cs" />
     <Compile Include="v4\Query_Select_Tests.cs" />
     <Compile Include="v4\Query_Skip_Tests.cs" />
     <Compile Include="v4\Query_Top_Tests.cs" />

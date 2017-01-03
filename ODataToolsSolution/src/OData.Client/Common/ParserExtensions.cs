@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -16,10 +14,20 @@ namespace Scrumfish.OData.Client.Common
             return expression.Body.ParseExpression();
         }
 
-        public static string ParseExpression(this Expression expression)
+        public static string ParseExpression(this Expression<Func<string, string>> expression)
+        {
+            return expression.Body.ParseExpression(SearchExpressionParsers);
+        }
+
+        public static string ParseExpression(this Expression expression, Dictionary<ExpressionType, Func<Expression, string>> expressionDictionary = null)
         {
             Func<Expression, string> method;
-            ExpressionParsers.TryGetValue(expression.NodeType, out method);
+            (expressionDictionary??ExpressionParsers).TryGetValue(expression.NodeType, out method);
+            if (method != null) return method(expression);
+            if (expressionDictionary != null && !expressionDictionary.Equals(ExpressionParsers))
+            {
+                ExpressionParsers.TryGetValue(expression.NodeType, out method);
+            }
             if (method == null)
             {
                 throw new InvalidExpressionException("Expression is not parsable.");
@@ -64,11 +72,19 @@ namespace Scrumfish.OData.Client.Common
             {
                 return ParseKnownMethod(callExpression, method);
             }
+
+            var results = new List<string>();
+            foreach (var argExpression in callExpression.Arguments.OfType<MethodCallExpression>())
+            {
+                results.Add(ParseCallExpression(argExpression));
+            }
+
             Func<MethodCallExpression, string> helper;
             HelperMethods.TryGetValue(callExpression.Method.Name, out helper);
             if (helper != null)
             {
-                return helper(callExpression);
+                results.Add(helper(callExpression));
+                return string.Join(" ", results);
             }
             throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
             
@@ -382,6 +398,25 @@ namespace Scrumfish.OData.Client.Common
             {ExpressionType.Lambda, (expression) => ((LambdaExpression)expression).Body.ParseExpression() }
         };
 
+        private static readonly Dictionary<ExpressionType, Func<Expression, string>> SearchExpressionParsers = new Dictionary
+            <ExpressionType, Func<Expression, string>>
+        {
+            {ExpressionType.Constant, ParseConstantSearchExpression},
+            {ExpressionType.Parameter, (e) => string.Empty }
+        };
+
+
+        private static string ParseConstantSearchExpression(Expression expression)
+        {
+            var result = expression.ParseConstantExpression();
+            var memberConstant = (ConstantExpression) expression;
+            if (memberConstant.Value != null && memberConstant.Type == typeof(string))
+            {
+                result = result.Substring(1, result.Length - 2);
+            }
+            return result;
+        }
+
         private static string ParseQuoteExpression(Expression arg)
         {
             var expression = arg as UnaryExpression;
@@ -458,7 +493,44 @@ namespace Scrumfish.OData.Client.Common
         private static readonly Dictionary<string, Func<MethodCallExpression, string>> HelperMethods = new Dictionary
             <string, Func<MethodCallExpression, string>>
         {
-            {"WithDependency", ParseHelperMethod}
+            {"WithDependency", ParseHelperMethod},
+            {"Match", ParseSearchHelperNonMethod},
+            {"Not", ParseSearchHelperMethod},
+            {"And", ParseSearchHelperMethod},
+            {"Or", ParseSearchHelperMethod},
+            {"Group", ParseGroupMethod }
         };
+
+        private static string ParseGroupMethod(MethodCallExpression expression)
+        {
+            if (expression.Arguments.Count() <= 1)
+            {
+                throw new InvalidExpressionException("A group must contain conditions.");
+            }
+            return NewStringBuilder("(")
+                .Append(string.Join(" ", expression.Arguments.Skip(1).Select(a => a.ParseExpression(SearchExpressionParsers))))
+                .Append(')')
+                .ToString();
+        }
+
+        private static string ParseSearchHelperNonMethod(MethodCallExpression expression)
+        {
+            if (expression.Arguments.Count() <= 1) return string.Empty;
+            var result = NewStringBuilder();
+            result.Append(string.Join(" ", expression.Arguments.Skip(1).Select(a => a.ParseExpression(SearchExpressionParsers))));
+            return result.ToString();
+        }
+
+        private static string ParseSearchHelperMethod(MethodCallExpression expression)
+        {
+            var result = NewStringBuilder(expression.Method.Name.ToUpper());
+            var methodParams = ParseSearchHelperNonMethod(expression);
+            if (methodParams.Length > 0)
+            {
+                result.Append(' ')
+                    .Append(methodParams);
+            }
+            return result.ToString();
+        }
     }
 }
