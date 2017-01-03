@@ -94,10 +94,13 @@ namespace Scrumfish.OData.Client.v4
         }
 
         public static ODataQuery<T> Search<T>(this ODataQuery<T> target, Expression<Func<string, string>> searchTerm)
-        public static ODataQuery<T> ExpandLevels<T>(this ODataQuery<T> target, int levels)
         {
             return target.AppendOperation("$search")
                 .AppendExpression(searchTerm.ParseExpression());
+        }
+
+        public static ODataQuery<T> ExpandLevels<T>(this ODataQuery<T> target, int levels)
+        {
             return target.AppendOperation("$levels")
                 .AppendExpression(levels);
         }
