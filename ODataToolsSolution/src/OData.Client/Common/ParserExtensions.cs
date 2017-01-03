@@ -72,11 +72,19 @@ namespace Scrumfish.OData.Client.Common
             {
                 return ParseKnownMethod(callExpression, method);
             }
+
+            var results = new List<string>();
+            foreach (var argExpression in callExpression.Arguments.OfType<MethodCallExpression>())
+            {
+                results.Add(ParseCallExpression(argExpression));
+            }
+
             Func<MethodCallExpression, string> helper;
             HelperMethods.TryGetValue(callExpression.Method.Name, out helper);
             if (helper != null)
             {
-                return helper(callExpression);
+                results.Add(helper(callExpression));
+                return string.Join(" ", results);
             }
             throw new InvalidExpressionException($"Unknown method {callExpression.Method.Name}.");
             
@@ -489,22 +497,40 @@ namespace Scrumfish.OData.Client.Common
             {"Match", ParseSearchHelperNonMethod},
             {"Not", ParseSearchHelperMethod},
             {"And", ParseSearchHelperMethod},
+            {"Or", ParseSearchHelperMethod},
+            {"Group", ParseGroupMethod }
         };
+
+        private static string ParseGroupMethod(MethodCallExpression expression)
+        {
+            if (expression.Arguments.Count() <= 1)
+            {
+                throw new InvalidExpressionException("A group must contain conditions.");
+            }
+            return NewStringBuilder("(")
+                .Append(string.Join(" ", expression.Arguments.Skip(1).Select(a => a.ParseExpression(SearchExpressionParsers))))
+                .Append(')')
+                .ToString();
+        }
 
         private static string ParseSearchHelperNonMethod(MethodCallExpression expression)
         {
+            if (expression.Arguments.Count() <= 1) return string.Empty;
             var result = NewStringBuilder();
-            if (expression.Arguments.Count() <= 1) return result.ToString();
-            result.Append(' ');
             result.Append(string.Join(" ", expression.Arguments.Skip(1).Select(a => a.ParseExpression(SearchExpressionParsers))));
             return result.ToString();
         }
 
         private static string ParseSearchHelperMethod(MethodCallExpression expression)
         {
-            return NewStringBuilder(expression.Method.Name.ToUpper())
-                .Append(ParseSearchHelperNonMethod(expression))
-                .ToString();
+            var result = NewStringBuilder(expression.Method.Name.ToUpper());
+            var methodParams = ParseSearchHelperNonMethod(expression);
+            if (methodParams.Length > 0)
+            {
+                result.Append(' ')
+                    .Append(methodParams);
+            }
+            return result.ToString();
         }
     }
 }
