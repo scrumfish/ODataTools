@@ -131,9 +131,9 @@ namespace Scrumfish.OData.Client.Tests.v4
         }
 
         [TestMethod]
-        public void Filter_ReturnsSubstringOfExpression_Test()
+        public void Filter_ReturnsContainsExpression_Test()
         {
-            var expected = "?$filter=substringof('ece',LastName)";
+            var expected = "?$filter=contains('ece',LastName)";
             var result = "?".CreateODataQuery<Person>()
                 .Filter(p => p.LastName.Contains("ece"))
                 .ToString();
@@ -425,7 +425,9 @@ namespace Scrumfish.OData.Client.Tests.v4
         {
             var expected = "?$filter=isof(Age,Edm.Int32)";
             var result = "?".CreateODataQuery<Person>()
+#pragma warning disable 183
                 .Filter(p => p.Age is int)
+#pragma warning restore 183
                 .ToString();
             Assert.AreEqual(expected, result);
         }

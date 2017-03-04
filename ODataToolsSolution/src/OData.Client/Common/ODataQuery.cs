@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Scrumfish.OData.Client.Common
@@ -12,10 +11,11 @@ namespace Scrumfish.OData.Client.Common
         private int SubQueryLevel { get; set; }
         private bool InQuery { get; set; }
         private bool IsStart { get; set; }
-        private HashSet<string> Operations { get; } = new HashSet<string>();
         private bool IsSubQuery { get; }
         private bool IsEmpty { get; set; } = true;
-       
+        private HashSet<string> Operations { get; } = new HashSet<string>();
+        private HashSet<string> Aliases { get; } = new HashSet<string>();
+
 
         internal ODataQuery(bool isSubquery)
         {
@@ -64,15 +64,20 @@ namespace Scrumfish.OData.Client.Common
             {
                 throw new InvalidOperationException($"{operation} is not a valid OData operation.");
             }
-            Operations.Add(operation);
             CurrentOperation = operation;
+            Operations.Add(operation);
+            AppendUriElement(operation);
+            return this;
+        }
+
+        private void AppendUriElement(string operation)
+        {
             if (!IsStart)
             {
-                _uri.Append( IsSubQuery ? ';' : '&');
+                _uri.Append(IsSubQuery ? ';' : '&');
             }
             IsStart = false;
             _uri.Append(operation);
-            return this;
         }
 
         internal ODataQuery<T> AssertCurrentOperation(string operation)
@@ -138,23 +143,20 @@ namespace Scrumfish.OData.Client.Common
             _uri.Append(subquery);
             return this;
         }
-    }
 
-    public static class ODataQueryBuilder
-    {
-        public static ODataQuery<T> CreateODataQuery<T>(this string baseUri)
+        internal ODataQuery<T> AppendAlias(string aliasName)
         {
-            return new ODataQuery<T>(baseUri);
-        }
-
-        public static ODataQuery<T> CreateODataQuery<T>(this Uri baseUri)
-        {
-            return new ODataQuery<T>(baseUri);
-        }
-
-        public static ODataQuery<T> CreateODataQuery<T>(bool isSubquery = true)
-        {
-            return new ODataQuery<T>(isSubquery);
+            if (Aliases.Contains(aliasName))
+            {
+                throw new InvalidOperationException($"{aliasName} has alread been added to query.");
+            }
+            if (!aliasName.StartsWith("@"))
+            {
+                throw new InvalidOperationException($"{aliasName} is not a valid OData alias.");
+            }
+            Aliases.Add(aliasName);
+            AppendUriElement(aliasName);
+            return this;
         }
     }
 }
