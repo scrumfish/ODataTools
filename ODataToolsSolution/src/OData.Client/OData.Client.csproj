@@ -47,10 +47,12 @@
     <Compile Include="Common\InvalidExpressionOperatorException.cs" />
     <Compile Include="Common\InvalidOperationException.cs" />
     <Compile Include="Common\ODataQuery.cs" />
+    <Compile Include="Common\ODataQueryBuilder.cs" />
     <Compile Include="Common\ParserExtensions.cs" />
     <Compile Include="Factories\StringifierFactory.cs" />
     <Compile Include="v4\Query.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryStubs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OData.Objects\OData.Objects.csproj">

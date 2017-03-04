@@ -105,39 +105,15 @@ namespace Scrumfish.OData.Client.v4
                 .AppendExpression(levels);
         }
 
-        public static object WithDependency<T>(this object target, Expression<Func<T, object>> dependency) 
-            where T : class
+        public static ODataQuery<TQ> Alias<TQ,TV>(this ODataQuery<TQ> target, string name, TV value)
         {
-            return target;
-        }
-
-        public static string Not(this string target, string searchTerm)
-        {
-            return target;
-        }
-        public static string Match(this string target, string searchTerm)
-        {
-            return target;
-        }
-        public static string And(this string target, string searchTerm)
-        {
-            return target;
-        }
-        public static string And(this string target)
-        {
-            return target;
-        }
-        public static string Or(this string target, string searchTerm)
-        {
-            return target;
-        }
-        public static string Or(this string target)
-        {
-            return target;
-        }
-        public static string Group(this string target, Expression<Func<string, string>> searchTerm)
-        {
-            return target;
+            if (value is string)
+            {
+                return target.AppendAlias(name)
+                    .AppendExpression($"'{value as string}'");
+            }
+            return target.AppendAlias(name)
+                .AppendExpression(value);
         }
     }
 }

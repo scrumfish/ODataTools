@@ -58,6 +58,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ParserExtensions_Tests.cs" />
+    <Compile Include="v4\Query_Alias_Tests.cs" />
     <Compile Include="TestObjects\Address.cs" />
     <Compile Include="TestObjects\Car.cs" />
     <Compile Include="TestObjects\Driver.cs" />

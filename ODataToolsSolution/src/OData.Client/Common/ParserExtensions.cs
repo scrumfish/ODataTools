@@ -90,12 +90,6 @@ namespace Scrumfish.OData.Client.Common
             
         }
 
-        private static string ParseHelperMethod(this MethodCallExpression expression)
-        {
-            var expressions = expression.Arguments.Select(a => a.ParseExpression());
-            return string.Join("/", expressions);
-        }
-
         private static string ParseKnownMethod(MethodCallExpression callExpression, MethodCall method)
         {
             var target = callExpression.Object?.ParseMemberExpression();
@@ -449,7 +443,7 @@ namespace Scrumfish.OData.Client.Common
         {
             {"EndsWith", new MethodCall {Name = "endswith", Order = ParameterOrder.TargetFirst}},
             {"StartsWith", new MethodCall {Name = "startswith", Order = ParameterOrder.TargetFirst}},
-            {"Contains", new MethodCall {Name = "substringof", Order = ParameterOrder.TargetLast}},
+            {"Contains", new MethodCall {Name = "contains", Order = ParameterOrder.TargetLast}},
             {"Substring", new MethodCall {Name = "substring", Order = ParameterOrder.TargetFirst}},
             {"Length", new MethodCall {Name = "length", Order = ParameterOrder.TargetFirst, SupportedTypes = new List<Type> {typeof(string)}}},
             {"IndexOf", new MethodCall {Name = "indexof", Order = ParameterOrder.TargetFirst}},
@@ -498,8 +492,34 @@ namespace Scrumfish.OData.Client.Common
             {"Not", ParseSearchHelperMethod},
             {"And", ParseSearchHelperMethod},
             {"Or", ParseSearchHelperMethod},
-            {"Group", ParseGroupMethod }
+            {"Group", ParseGroupMethod },
+            {"AsAlias", ParseAliasMethod }
         };
+
+        private static string ParseAliasMethod(MethodCallExpression expression)
+        {
+            if (expression.Arguments.Count() != 1)
+            {
+                throw new InvalidExpressionException("An alias must contain exactly one parameter.");
+            }
+            var constant = expression.Arguments[0] as ConstantExpression;
+            if (constant == null)
+            {
+                throw new InvalidExpressionException("Alias arguments must be a constant expression.");
+            }
+            var result = $"{constant.Value}";
+            if (!result.StartsWith("@"))
+            {
+                throw new InvalidOperationException("Aliases must start with @");
+            }
+            return result;
+        }
+
+        private static string ParseHelperMethod(this MethodCallExpression expression)
+        {
+            var expressions = expression.Arguments.Select(a => a.ParseExpression());
+            return string.Join("/", expressions);
+        }
 
         private static string ParseGroupMethod(MethodCallExpression expression)
         {
@@ -508,7 +528,8 @@ namespace Scrumfish.OData.Client.Common
                 throw new InvalidExpressionException("A group must contain conditions.");
             }
             return NewStringBuilder("(")
-                .Append(string.Join(" ", expression.Arguments.Skip(1).Select(a => a.ParseExpression(SearchExpressionParsers))))
+                .Append(string.Join(" ",
+                    expression.Arguments.Skip(1).Select(a => a.ParseExpression(SearchExpressionParsers))))
                 .Append(')')
                 .ToString();
         }

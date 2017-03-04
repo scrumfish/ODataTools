@@ -9,6 +9,7 @@ namespace Scrumfish.OData.Client.Tests.TestObjects
         public int personId { get; set; } 
         public string LastName { get; set; }
         public string FirstName { get; set; }
+        public string PreferredName { get; set; }
         public int Age { get; set; }
         public DateTime Birthday { get; set; }
         public long? SomeBigNumber { get; set; }
